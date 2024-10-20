@@ -7,12 +7,14 @@ import 'brains.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
-class ConnectGlucometer extends StatefulWidget{
+
+class ConnectGlucometer extends StatefulWidget {
   Map<String, BleDevice?>? glucometer;
   ConnectGlucometer({super.key, this.glucometer});
 
   @override
-  State<ConnectGlucometer> createState() => _ConnectGlucometerState(glucometer: glucometer);
+  State<ConnectGlucometer> createState() =>
+      _ConnectGlucometerState(glucometer: glucometer);
 }
 
 class _ConnectGlucometerState extends State<ConnectGlucometer> {
@@ -22,25 +24,26 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   String errormsg = "";
   Map<String, BleDevice?>? glucometer;
   _ConnectGlucometerState({this.glucometer});
-  void err(String msg){
+  void err(String msg) {
     errormsg = msg;
-    print("BLE: "+msg);
+    print("BLE: " + msg);
   }
+
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    UniversalBle.onAvailabilityChange = (state){
+    UniversalBle.onAvailabilityChange = (state) {
       setState(() {
         avSt = state;
       });
     };
-    UniversalBle.onScanResult = (res){
-      int i = bleDevices.indexWhere((e)=>e.deviceId==res.deviceId);
-      if(i==-1){
-        bleDevices.add(res);//add to list of options if not already there
-      }else{
-        if(res.name==null&&bleDevices[i].name!=null){
-          res.name = bleDevices[i].name;//update new info for existing devices
+    UniversalBle.onScanResult = (res) {
+      int i = bleDevices.indexWhere((e) => e.deviceId == res.deviceId);
+      if (i == -1) {
+        bleDevices.add(res); //add to list of options if not already there
+      } else {
+        if (res.name == null && bleDevices[i].name != null) {
+          res.name = bleDevices[i].name; //update new info for existing devices
         }
         bleDevices[i] = res;
       }
@@ -49,85 +52,113 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
       });
     };
   }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     return Column(
       children: [
         Text(errormsg),
-        Row(
-          children: [
-            ElevatedButton(child: isscanning?Text("Stop Search"):Text("Search for Glucometers"), onPressed: () async{
-              if(!isscanning){
-                setState(() {
-                  bleDevices.clear();
-                  isscanning = true;
-                });
-                try{
-                  await UniversalBle.startScan(
-                    scanFilter: ScanFilter(
-                      withServices: ["0x1808"]
-                    )
-                  );
-                }catch(e){
+        Row(children: [
+          Flexible(
+            flex: 1,
+            child: ElevatedButton(
+              child: isscanning
+                  ? Text("Stop Search")
+                  : Text("Search for Glucometers"),
+              onPressed: () async {
+                if (!isscanning) {
+                  setState(() {
+                    bleDevices.clear();
+                    isscanning = true;
+                  });
+                  try {
+                    await UniversalBle.startScan(
+                        scanFilter: ScanFilter(withServices: ["0x180A"]));
+                  } catch (e) {
+                    setState(() {
+                      isscanning = false;
+                      err("Something went wrong" + e.toString());
+                    });
+                  }
+                } else {
+                  await UniversalBle.stopScan();
                   setState(() {
                     isscanning = false;
-                    err("Something went wrong");
                   });
                 }
-              }else{
-                await UniversalBle.stopScan();
-                setState(() {
-                  isscanning = false;
-                });
-              }
-            },),
-            if(BleCapabilities.supportsBluetoothEnableApi&&avSt==AvailabilityState.poweredOff)
-              ElevatedButton(onPressed: () async{
-                bool v = await UniversalBle.enableBluetooth();
-                err("Enabled? $v");
-              }, child: Text("Enable Bluetooth")),
-            if(BleCapabilities.requiresRuntimePermission)
-              ElevatedButton(onPressed: () async{
-                if(await PermissionHandler.arePermissionsGranted()){
-                  err("Permissions Granted");
-                }
-              }, child: Text("Check Permissions")),
-            if(BleCapabilities.supportsConnectedDevicesApi)
-              ElevatedButton(onPressed: () async{
-                List<BleDevice> devs = await UniversalBle.getSystemDevices();
-                if(devs.isEmpty){
-                  err("No Connected Devices Found");
-                }
-                setState(() {
-                  bleDevices.clear();
-                  bleDevices.addAll(devs);
-                });
-              }, child: Text("List Connected Devices")),
-            if(bleDevices.isNotEmpty)
-              ElevatedButton(onPressed: (){
-                setState(() {
-                  bleDevices.clear();
-                });
-              }, child: Text("Clear List"))
-          ]
-        ),
+              },
+            ),
+          ),
+          if (BleCapabilities.supportsBluetoothEnableApi &&
+              avSt == AvailabilityState.poweredOff)
+            Flexible(
+                flex: 1,
+                child: ElevatedButton(
+                    onPressed: () async {
+                      bool v = await UniversalBle.enableBluetooth();
+                      err("Enabled? $v");
+                    },
+                    child: const Text("Enable Bluetooth"))),
+          if (BleCapabilities.requiresRuntimePermission)
+            Flexible(
+                flex: 1,
+                child: ElevatedButton(
+                    onPressed: () async {
+                      if (await PermissionHandler.arePermissionsGranted()) {
+                        err("Permissions Granted");
+                      }
+                    },
+                    child: const Text("Check Permissions"))),
+          if (BleCapabilities.supportsConnectedDevicesApi)
+            Flexible(
+                flex: 1,
+                child: ElevatedButton(
+                    onPressed: () async {
+                      List<BleDevice> devs =
+                          await UniversalBle.getSystemDevices();
+                      if (devs.isEmpty) {
+                        err("No Connected Devices Found");
+                      }
+                      setState(() {
+                        bleDevices.clear();
+                        bleDevices.addAll(devs);
+                      });
+                    },
+                    child: const Text("List Connected Devices"))),
+          if (bleDevices.isNotEmpty)
+            Flexible(
+                flex: 1,
+                child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        bleDevices.clear();
+                      });
+                    },
+                    child: Text("Clear List")))
+        ]),
         Text("BLE Availability: ${avSt?.name}"),
         Divider(color: Colors.green.shade900),
-        Container(child: isscanning&&bleDevices.isEmpty
-          ? Center(child: CircularProgressIndicator.adaptive())
-          : !isscanning&&bleDevices.isEmpty
-            ? Placeholder()
-            : ListView.separated(itemBuilder: (context, index){
-                BleDevice dev = bleDevices[bleDevices.length-index-1];
-                return Text(dev.deviceId);
-              }, separatorBuilder: (context, index)=>Divider(), itemCount: bleDevices.length)
-        )
+        Container(
+            child: isscanning && bleDevices.isEmpty
+                ? Center(child: CircularProgressIndicator.adaptive())
+                : !isscanning && bleDevices.isEmpty
+                    ? Placeholder()
+                    : ListView.separated(
+                        itemBuilder: (context, index) {
+                          BleDevice dev =
+                              bleDevices[bleDevices.length - index - 1];
+                          return Text(dev.deviceId);
+                        },
+                        separatorBuilder: (context, index) => Divider(),
+                        shrinkWrap: true,
+                        itemCount: bleDevices.length))
       ],
     );
   }
 }
-class Midget extends StatefulWidget{
+
+class Midget extends StatefulWidget {
   @override
   State<Midget> createState() => _MidgetState();
 }
@@ -138,7 +169,9 @@ class _MidgetState extends State<Midget> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(Duration(seconds: 15), (timer){callback!();});
+    timer = Timer.periodic(Duration(seconds: 15), (timer) {
+      callback!();
+    });
   }
 
   @override
@@ -146,11 +179,13 @@ class _MidgetState extends State<Midget> {
     timer?.cancel();
     super.dispose();
   }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return SizedBox.shrink();
   }
 }
+
 class PermissionHandler {
   static Future<bool> arePermissionsGranted() async {
     if (!isMobilePlatform) return true;
@@ -220,21 +255,27 @@ class PermissionHandler {
     return androidInfo.version.sdkInt >= 31;
   }
 }
-Future<void> connectGlucometer() async{
-  void decode(Uint8List s){
+
+Future<void> connectGlucometer() async {
+  void decode(Uint8List s) {
     //
   }
   //connect to glucometer when available, and obtain service to get readings
   UniversalBle.onScanResult = (BleDevice bleDevice) async {
     var deviceId = bleDevice.deviceId;
-    print("Device found "+deviceId);
+    print("Device found " + deviceId);
     await UniversalBle.connect(deviceId);
+
     print("Device connected");
     List<BleService> b = await UniversalBle.discoverServices(deviceId);
-    print("Services obtained");
-    BleService s = b.firstWhere((t)=>t.uuid=='0x1808');
-    print("Service id "+s.uuid);
-    Uint8List us = await UniversalBle.readValue(deviceId, s.uuid, '0000-00001-'+deviceId);
+    print("Services obtained:" + b.toString());
+
+    BleService s = b.firstWhere((t) => t.uuid == BleUuidParser.string("180A"));
+    print("Service id " + s.uuid);
+
+    Uint8List us = await UniversalBle.readValue(
+        deviceId, s.uuid, '0000-00001-' + deviceId);
+    print(us.toString());
     decode(us);
   };
   AvailabilityState state = await UniversalBle.getBluetoothAvailabilityState();
@@ -242,10 +283,10 @@ Future<void> connectGlucometer() async{
   print(state);
   if (state == AvailabilityState.poweredOn) {
     print("Starting scan");
-    UniversalBle.startScan(
-      /*scanFilter: ScanFilter(
-        withServices: ["0x1808"]
-      )*/
-    );
+    // UniversalBle.startScan(
+    //     /*scanFilter: ScanFilter(
+    //     withServices: ["0x1808"]
+    //   )*/
+    //     );
   }
 }
