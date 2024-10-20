@@ -118,7 +118,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
           ? Center(child: CircularProgressIndicator.adaptive())
           : !isscanning&&bleDevices.isEmpty
             ? Placeholder()
-            : ListView.separated(itemBuilder: (context, index){
+            : ListView.separated(shrinkWrap: true, itemBuilder: (context, index){
                 BleDevice dev = bleDevices[bleDevices.length-index-1];
                 return Text(dev.deviceId);
               }, separatorBuilder: (context, index)=>Divider(), itemCount: bleDevices.length)

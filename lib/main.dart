@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'brains.dart';
 import 'pages.dart';
+import 'redbone.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         break;
       case 1:
-        page = ConnectPage();//connect, remove, and manage glucose monitors
+        page = ConnectPage();//Expanded(child:ConnectGlucometer(glucometer:{"dev":null}));//connect, remove, and manage glucose monitors
         break;
       case 2:
         page = Settings(callback: logOut);//accoutn settings and stuff
@@ -95,6 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                   currentIndex: selectedIndex,
                   onTap: (value) {
+                    if(!appState.ishttpying)
                     setState((){
                       selectedIndex = value;
                     });

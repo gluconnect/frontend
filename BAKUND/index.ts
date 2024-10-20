@@ -29,7 +29,7 @@ var Users = [{
   id: 'jack2',
   name: "jackk2",
   password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'
-}]
+}];
 type User = {
   name: string,
   id: string,
@@ -82,6 +82,7 @@ function serializeReading(x:GlucoReading){
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
   glooc.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return glooc;
 }
 //NumerIt code
 function hash(value){
@@ -96,7 +97,7 @@ app.post('/register', (req, res)=>{
     if(Users.some((user)=>user.id===req.body.email)){
       res.sendStatus(401);
     }else{
-      Users.push({id:req.body.email, password:hash(req.body.password), name:req.body.email/*TODO*/})
+      Users.push({id:req.body.email, password:hash(req.body.password), name:req.body.name})
       console.log(Users)
       res.sendStatus(200);
     }
@@ -155,6 +156,7 @@ app.post('/add_reading', checkLogin, (req, res)=>{
     let user = getUser(req);
     if(!user.readings)user.readings = [];
     user.readings.push(toReading(req.body));
+    console.log(user.readings);
     res.sendStatus(200);
   }
 })
@@ -163,6 +165,12 @@ app.post('/get_readings', checkLogin, (req, res)=>{
   console.log(user.readings);
   if(!user.readings)user.readings = [];
   res.status(200).json(user.readings.map((i)=>serializeReading(i)));
+})
+app.post('/clear_readings', checkLogin, (req, res)=>{
+  let user = getUser(req);
+  console.log(user.readings);
+  user.readings = [];
+  res.sendStatus(200);
 })
 app.post('/spectate_readings', checkLogin, (req, res)=>{
   let user = getUser(req);
