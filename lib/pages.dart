@@ -187,8 +187,10 @@ class _LogInPageState extends State<LogInPage> {
 }
 
 class HomePage extends StatefulWidget{
+  String oemail;
+  HomePage({super.key, this.oemail = ""});
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState(oemail: oemail);
 }
 
 class _HomePageState extends State<HomePage> {
@@ -196,14 +198,27 @@ class _HomePageState extends State<HomePage> {
   bool needsupdate = true;//fetch readings first TODO(run every 10 seconds or so)
   String errormsg = "";
   bool waitfornext = false;
+  List? plist = [];
+  double currthres = 0;
+  String oemail;
+  _HomePageState({this.oemail = ""});
   Future<void> fetchLists(MyAppState s)async{
     //var clist = await s.getCaretakers();
     if(waitfornext)
       await Future.delayed(Duration(seconds: 5));
-    print("starting request");
-    var plist = await s.getCaretakers();
+    print("starting request for readings of "+oemail);
+    double? cthres;
+    if(oemail==""){
+      plist = await s.getReadings();
+      print("Readings get!");
+      cthres = await s.getThreshold();
+    }else{
+      plist = await s.spectateReadings(oemail);
+      cthres = await s.spectateThreshold(oemail);
+    }
     print("request complete");
-    if(plist!=null){
+    if(plist!=null&&cthres!=null){
+      currthres = cthres;
       setState((){
         needsupdate = false;
         waitfornext = false;
@@ -218,8 +233,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context){
     var appState = context.watch<MyAppState>();
+    String title = oemail==""?"Welcome, ${appState.lastinfo['name']}!":"Viewing "+oemail+"'s readings";
     //appState.addGlucometers();
-    var list = appState.glucometers;
     if(isconnecting){
       final formKey = GlobalKey<FormState>();
       TextEditingController timec = TextEditingController();
@@ -353,7 +368,7 @@ class _HomePageState extends State<HomePage> {
         //),
       );
       //return ElevatedButton(child: Text("Connect Glucometer"), onPressed: (){});
-    }else if (needsupdate){
+    }else if (needsupdate||plist==null){
       fetchLists(appState);
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -363,15 +378,15 @@ class _HomePageState extends State<HomePage> {
       );
     }else if(errormsg!=""){
       return Text(errormsg);
-    }else if (list.isEmpty) {
+    }else if (plist!.isEmpty) {
       return Center(
         child: Column(
           children: [
-            Text("Welcome, ${appState.lastinfo['name']}!", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             const Text('No readings available yet'),
             if(appState.glucometers.isEmpty)
               Text("You have no connected glucose monitors...Go to the connect tab to connect one"),
-            Padding(
+            if(oemail=="")Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(onPressed: (){
                 setState((){isconnecting = true;});
@@ -383,23 +398,54 @@ class _HomePageState extends State<HomePage> {
     }
     return ListView(
       children: <Widget>[
-        Text("Welcome, ${appState.lastinfo['name']}!", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.readings.length} glucose readings'),
+        Center(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),)),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(currthres<0?"Set a Warning Threshold Now!":"Your current warning threshold is:", style: TextStyle(fontSize: 25)),
+            ],
+          ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
+        if(currthres>=0)Center(child: Text(currthres.toString(), style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),),
+        Center(
           child: ElevatedButton(onPressed: (){
-            setState((){isconnecting = true;});
-          }, child: const Icon(Icons.add)),
+          }, child: Text(currthres<0?"Set Threshold":"Change")),
         ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text('You have '
+                '${appState.readings.length} glucose readings'),
+          ),
+        ),
+        if(oemail=="")Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(onPressed: (){
+              setState((){isconnecting = true;});
+            }, child: const Icon(Icons.add)),
+          ),
+        ),
+        Table(
+          children:[
+            TableRow(children: [
+              for(int i = 0; i < 5; i++)
+                Divider(color: Colors.black, thickness: 2.0),
+            ]),
+            TableRow(children: [
+              Text("Time", style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Meal Time", style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Glucose Reading Value", style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Measuring Method", style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Additional Comments", style: const TextStyle(fontWeight: FontWeight.bold)),
+            ]),
+            TableRow(children: [
+              for(int i = 0; i < 5; i++)
+                Divider(color: Colors.black, thickness: 2.0),
+            ]),
         for (GlucoReading glucometer in appState.readings.reversed)
-          ListTile(
-            leading: const Icon(Icons.wifi),
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          TableRow(
               children: [
                 Text(glucometer.timestamp.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
                 Text(glucometer.meal, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -407,8 +453,8 @@ class _HomePageState extends State<HomePage> {
                 Text(glucometer.measure_method, style: const TextStyle(fontWeight: FontWeight.bold)),
                 Text(glucometer.comment, style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
-            ),
-          ),
+            ),]
+        ),
         /*for(WordPair wp in list)
           BigCard(thing: wp),*/
       ]
@@ -762,7 +808,7 @@ class _ConnectPageState extends State<ConnectPage> {
               children: [
                 Text(glucometer.name),
                 Spacer(),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                ElevatedButton(child: Icon(Icons.delete/*TODO*/), onPressed: (){
                   appState.deleteGlucometer(glucometer.id);
                   setState((){});
                 })
@@ -792,13 +838,18 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
   var glucometers = 0;
   bool needsupdate = true;//whether to run fetchlists when building
   bool isconnecting = false;
+  String spectate = "";
   String errormsg = "";
   Function? callback;
   _SelectPatientsPageState({this.callback});
-  void nuPage(int mode){
+  void nuPage(int mode, [String o = ""]){
     if(mode==0){
       setState((){
         isconnecting = true;
+      });
+    }else{
+      setState((){
+        spectate = o;
       });
     }
   }
@@ -818,7 +869,17 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
   Widget build(BuildContext context){
     //appState.addGlucometers();
     var appState = context.watch<MyAppState>();
-    if(isconnecting){
+    if(spectate!=""){
+      return Column(children: [
+        Row(
+          children: [
+            Spacer(),
+            ElevatedButton(onPressed: (){setState((){spectate = "";});}, child: Icon(Icons.cancel)),
+          ],
+        ),
+        HomePage(oemail: spectate)
+      ],);
+    }else if(isconnecting){
       final formKey = GlobalKey<FormState>();
       TextEditingController userc = TextEditingController();
       return Center(
@@ -976,9 +1037,9 @@ class _PatientListState extends State<PatientList> {
                 Spacer(),
                 ElevatedButton(child: Icon(Icons.search), onPressed: (){
                   //TODO: VIEW PATIENT
-                  setState((){});
+                  callback!(1, glucometer.id);
                 }),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                ElevatedButton(child: Icon(Icons.delete/*TODO*/), onPressed: (){
                   appState.deletePatient(glucometer.id, ({String msg = ""}){setState((){errormsg = msg;});});
                   setState((){});
                 })
@@ -1071,7 +1132,7 @@ class _CaretakerListState extends State<CaretakerList> {
               children: [
                 Text(glucometer.name),
                 Spacer(),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                ElevatedButton(child: Icon(Icons.delete/*TODO*/), onPressed: (){
                   appState.deleteCaretaker(glucometer.id, ({String msg = ""}){setState((){errormsg = msg;});});
                   setState((){});
                 })

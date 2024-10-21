@@ -19,7 +19,25 @@ app.use(session({ saveUninitialized: true, resave: true, secret: "ogbdfoodbkfpob
 var Users = [{
         id: 'jack',
         name: "jackk",
-        password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'
+        password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1',
+        readings: [
+            {
+                timestamp: new Date('December 17, 1995 03:24:00'),
+                value: '120.4',
+                meal: 'After Meal',
+                comment: '',
+                measure_method: 'blood sample',
+                extra_data: new Map()
+            },
+            {
+                timestamp: new Date('December 21, 1997 02:14:03'),
+                value: '110.2',
+                meal: 'Before Meal',
+                comment: '',
+                measure_method: 'blood sample',
+                extra_data: new Map()
+            }
+        ]
     },
     {
         id: 'jack2',
@@ -162,7 +180,7 @@ app.post('/clear_readings', checkLogin, function (req, res) {
 app.post('/spectate_readings', checkLogin, function (req, res) {
     var user = getUser(req);
     if (!user.patients.some(function (v) { return v.email == req.uemail; })) { //make sure user authorizes patient.
-        res.status(401);
+        res.sendStatus(401);
         return;
     }
     var u = getUser({ body: { email: req.uemail } });
@@ -192,14 +210,31 @@ app.post('/get_patients', checkLogin, function (req, res) {
 });
 app.post('/change_threshold', checkLogin, function (req, res) {
     var user = getUser(req);
+    if (typeof req.body.threshold !== 'number') {
+        res.sendStatus(401);
+        return;
+    }
     user.threshold = req.body.threshold;
     console.log(Users);
-    res.status(200).send(req.body.threshold);
+    res.status(200).send(req.body.threshold + "");
 });
 app.post('/get_threshold', checkLogin, function (req, res) {
     var user = getUser(req);
     console.log(Users);
-    res.status(200).send(user.threshold);
+    if (!user.threshold)
+        user.threshold = -1;
+    res.status(200).send(user.threshold + "");
+});
+app.post('/spectate_threshold', checkLogin, function (req, res) {
+    var user = getUser(req);
+    if (!user.patients.some(function (v) { return v.email == req.uemail; })) { //make sure user authorizes patient.
+        res.sendStatus(401);
+        return;
+    }
+    var u = getUser({ body: { email: req.uemail } });
+    if (!u.threshold)
+        u.threshold = -1;
+    res.status(200).send(u.threshold);
 });
 app.post('/change_name', checkLogin, function (req, res) {
     var user = getUser(req);

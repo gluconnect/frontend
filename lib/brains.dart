@@ -30,8 +30,8 @@ class GlucoReading{
   String  measure_method = "blood sample";
   Map<String, dynamic>? extra_data;
   GlucoReading(dynamic thing){
-    timestamp = thing['timestamp'];
-    value = thing['value'];
+    timestamp = DateTime.parse(thing['timestamp'].replaceFirst(' ', 'T'));
+    value = double.parse(thing['value']);
     meal = thing['meal'];
     if(true){
       comment = thing['comment'];
@@ -49,6 +49,7 @@ class MyAppState extends ChangeNotifier {
   List caretakers = <Caretaker>[];
   List patients = <Patient>[];
   List readings = <GlucoReading>[];
+  List readings2 = <GlucoReading>[];
   var lastinfo = {"user": "", "pass": "", "name": ""};
   var URL = "http://localhost:8008";
   var servdowncode = 501;
@@ -334,8 +335,128 @@ ishttpying = false;
     } catch(e){print(e);}
     if(rp!=null&&rp!.statusCode==200){
       List<dynamic> res = jsonDecode(rp.body);
-      readings = res.map((v)=>GlucoReading(v)).toList();
-      return res;
+      print(res);
+      try{readings = res.map((v)=>GlucoReading(v)).toList();}catch(e){return null;}
+      print(readings);
+      return readings;
+    }else{
+      return null;
+    }
+  }
+  Future<List?> spectateReadings(otheremail) async{
+    Future<http.Response> getRD(String u, String p, String o) async {
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/spectate_readings'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+          'uemail': o
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      List<dynamic> res = jsonDecode(rp.body);
+      try{readings2 = res.map((v)=>GlucoReading(v)).toList();print(readings2);}catch(e){return null;}
+      return readings2;
+    }else{
+      return null;
+    }
+  }
+  Future<double?> getThreshold() async{
+    Future<http.Response> getRD(String u, String p) async {
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/get_threshold'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      print("got threshold in req");
+      double threshold = double.parse(rp.body);
+      lastinfo['threshold'] = threshold.toString();
+      print("Benchmark 2");
+      return threshold;
+    }else{
+      return null;
+    }
+  }
+  Future<double?> spectateThreshold(otheremail) async{
+    Future<http.Response> getRD(String u, String p, String o) async {
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/spectate_threshold'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+          'uemail': o
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      double threshold = double.parse(rp.body);
+      lastinfo['othreshold'] = threshold.toString();
+      return threshold;
     }else{
       return null;
     }
