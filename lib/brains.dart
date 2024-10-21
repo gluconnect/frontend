@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 class Caretaker{
   static var count = 1;
   Caretaker({this.id = "", this.name = "Glucometer"});
@@ -50,24 +51,36 @@ class MyAppState extends ChangeNotifier {
   List readings = <GlucoReading>[];
   var lastinfo = {"user": "", "pass": "", "name": ""};
   var URL = "http://localhost:8008";
+  var servdowncode = 501;
+  var ishttpying = false;
   void addGlucometer({String name = "", BleDevice? dev}){
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
   }
-  //request the server to authorize another user as a caretaker. If successful, return the correct code so that the user can be added to the list
-  Future<int> addCaretaker(email) async{
-    Future<int> addCT(String u, String p, String ou) async {
-      final response = await http.post(
-        Uri.parse('$URL/connect_user'),
+  Future<http.Response> tagTimeout(Future<http.Response> r){
+    return r.timeout(Duration(seconds: 5));
+  }
+  Future<int> addReading(timestamp, value, meal, method, comments) async{
+    double value2 = double.parse(value);
+    Future<int> addCT(String u, String p, timestamp, value, meal, method, comments) async {
+      ishttpying = true;
+final response = await tagTimeout(http.post(
+        Uri.parse('$URL/add_reading'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
           'email': u,
           'password': p,
-          'uemail': ou
+          'timestamp': timestamp,
+          'value': value,
+          'meal': meal,
+          'measure_method': method,
+          'comment': comments,
+          'extra_data': "{}"
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         //If the server return 200, add caretaker
         return response.statusCode;// as Map<String, String>;
@@ -78,7 +91,49 @@ class MyAppState extends ChangeNotifier {
         return 0;
       }
     }
-    int rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, email);
+    int rp = 500;
+    try{
+      print("ADDDDDD");
+      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
+    } catch(e){print(e);}
+    if(rp==200){
+      readings.add(GlucoReading(jsonDecode("{'timestamp': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
+      //callback();
+    }else{
+      //callback("User does not exist");
+    }
+    return rp;
+  }
+  //request the server to authorize another user as a caretaker. If successful, return the correct code so that the user can be added to the list
+  Future<int> addCaretaker(email) async{
+    Future<int> addCT(String u, String p, String ou) async {
+      ishttpying = true;
+final response = await tagTimeout(http.post(
+        Uri.parse('$URL/connect_user'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+          'uemail': ou
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        //If the server return 200, add caretaker
+        return response.statusCode;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        //fail and tell user
+        return response.statusCode;
+      }else{
+        return 0;
+      }
+    }
+    int rp = 500;
+    try{
+      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, email);
+    } catch(e){print(e);}
     if(rp==200){
       caretakers.add(Caretaker(id: email, name: email/*TODO*/));
       //callback();
@@ -92,7 +147,8 @@ class MyAppState extends ChangeNotifier {
   }
   Future<int> deleteCaretaker(id, Function callback) async{
     Future<int> remCT(String u, String p, String ou) async {
-      final response = await http.post(
+      ishttpying = true;
+final response = await tagTimeout(http.post(
         Uri.parse('$URL/disconnect_user'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -102,7 +158,8 @@ class MyAppState extends ChangeNotifier {
           'password': p,
           'uemail': ou
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -115,7 +172,10 @@ class MyAppState extends ChangeNotifier {
         return 0;
       }
     }
-    int rp = await remCT(lastinfo["user"]!, lastinfo["pass"]!, id);
+    int rp = 500;
+    try{
+      rp = await remCT(lastinfo["user"]!, lastinfo["pass"]!, id);
+    } catch(e){print(e);}
     if(rp==200){
       caretakers.removeWhere((i)=>i.id==id);
       callback();
@@ -126,7 +186,8 @@ class MyAppState extends ChangeNotifier {
   }
   Future<int> deletePatient(id, Function callback) async{
     Future<int> remPT(String u, String p, String ou) async {
-      final response = await http.post(
+      ishttpying = true;
+final response = await tagTimeout(http.post(
         Uri.parse('$URL/disconnect_patient'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -136,7 +197,8 @@ class MyAppState extends ChangeNotifier {
           'password': p,
           'uemail': ou
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -149,7 +211,10 @@ class MyAppState extends ChangeNotifier {
         return 0;
       }
     }
-    int rp = await remPT(lastinfo["user"]!, lastinfo["pass"]!, id);
+    int rp = 500;
+    try{
+      rp = await remPT(lastinfo["user"]!, lastinfo["pass"]!, id);
+    } catch(e){print(e);}
     if(rp==200){
       patients.removeWhere((i)=>i.id==id);
       callback();
@@ -161,7 +226,8 @@ class MyAppState extends ChangeNotifier {
   Future<List?> getPatients() async{
     Future<http.Response> getPT(String u, String p) async {
       print(u+" "+p);
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_patients'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -170,7 +236,8 @@ class MyAppState extends ChangeNotifier {
           'email': u,
           'password': p,
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -183,8 +250,11 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await getPT(lastinfo["user"]!, lastinfo["pass"]!);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await getPT(lastinfo["user"]!, lastinfo["pass"]!);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       List res = jsonDecode(rp.body);
       print(res);
       patients = res.map((v)=>Patient(id: v['email'], name: v['name'])).toList();
@@ -195,7 +265,8 @@ class MyAppState extends ChangeNotifier {
   }
   Future<List?> getCaretakers() async{
     Future<http.Response> getCT(String u, String p) async {
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_viewers'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -204,7 +275,8 @@ class MyAppState extends ChangeNotifier {
           'email': u,
           'password': p,
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -217,8 +289,11 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await getCT(lastinfo["user"]!, lastinfo["pass"]!);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await getCT(lastinfo["user"]!, lastinfo["pass"]!);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       List res = jsonDecode(rp.body);
       print(res);
       caretakers = res.map((v)=>Caretaker(id: v['email'], name: v['name'])).toList();
@@ -229,7 +304,8 @@ class MyAppState extends ChangeNotifier {
   }
   Future<List?> getReadings() async{
     Future<http.Response> getRD(String u, String p) async {
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_readings'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -238,7 +314,8 @@ class MyAppState extends ChangeNotifier {
           'email': u,
           'password': p,
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -251,8 +328,11 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       List<dynamic> res = jsonDecode(rp.body);
       readings = res.map((v)=>GlucoReading(v)).toList();
       return res;
@@ -263,7 +343,8 @@ class MyAppState extends ChangeNotifier {
   Future<String?> changeName(String nname) async{
     Future<http.Response> change(String u, String p, String nname) async {
       print(u+" "+p);
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_name'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -273,7 +354,8 @@ class MyAppState extends ChangeNotifier {
           'password': p,
           'newname': nname
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -286,8 +368,11 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await change(lastinfo["user"]!, lastinfo["pass"]!, nname);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await change(lastinfo["user"]!, lastinfo["pass"]!, nname);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       lastinfo["name"] = rp.body;
       return rp.body;
     }else{
@@ -297,7 +382,8 @@ class MyAppState extends ChangeNotifier {
   Future<String?> changePass(String npass) async{
     Future<http.Response> change(String u, String p, String npass) async {
       print(u+" "+p);
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_password'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -307,7 +393,8 @@ class MyAppState extends ChangeNotifier {
           'password': p,
           'newpassword': npass
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -320,8 +407,11 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await change(lastinfo["user"]!, lastinfo["pass"]!, npass);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await change(lastinfo["user"]!, lastinfo["pass"]!, npass);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       lastinfo["pass"] = npass;
       return rp.body;
     }else{
@@ -331,7 +421,8 @@ class MyAppState extends ChangeNotifier {
   Future<int> logIn(username, password) async{
     print("${"User: "+username} Password: "+password);
     Future<int> logIn(String u, String p) async {
-      final response = await http.post(
+      ishttpying = true;
+final response = await tagTimeout(http.post(
         Uri.parse('$URL/verify'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -340,7 +431,8 @@ class MyAppState extends ChangeNotifier {
           'email': u,
           'password': p
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -355,7 +447,11 @@ class MyAppState extends ChangeNotifier {
         return 0;
       }
     }
-    int rp = await logIn(username, password);
+    int rp = 500;
+    try{
+      rp = await logIn(username, password);
+    } catch(e){print(e);
+    }
     print(rp);
     if(rp==200){
       lastinfo["user"] = username;
@@ -363,19 +459,22 @@ class MyAppState extends ChangeNotifier {
     }
     return rp;
   }
-  Future<int> register(username, password) async{
+  Future<int> register(username, password, nickname) async{
     print("${"User: "+username} Password: "+password);
-    Future<int> logIn(String u, String p) async {
-      final response = await http.post(
+    Future<int> logIn(String u, String p, String n) async {
+      ishttpying = true;
+final response = await tagTimeout(http.post(
         Uri.parse('$URL/register'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
           'email': u,
-          'password': p
+          'password': p,
+          'name': n
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -388,7 +487,10 @@ class MyAppState extends ChangeNotifier {
         return 0;
       }
     }
-    int rp = await logIn(username, password);
+    int rp = 500;
+    try{
+      rp = await logIn(username, password, nickname);
+    } catch(e){print(e);}
     print(rp);
     return rp;
   }
@@ -400,7 +502,8 @@ class MyAppState extends ChangeNotifier {
   Future<int> deleteAccount() async{
     Future<http.Response> change(String u, String p) async {
       print(u+" "+p);
-      final http.Response response = await http.post(
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/delete'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -409,7 +512,8 @@ class MyAppState extends ChangeNotifier {
           'email': u,
           'password': p,
         }),
-      );
+      ));
+ishttpying = false;
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         // then parse the JSON.
@@ -422,12 +526,15 @@ class MyAppState extends ChangeNotifier {
         return response;
       }
     }
-    http.Response rp = await change(lastinfo["user"]!, lastinfo["pass"]!);
-    if(rp.statusCode==200){
+    http.Response? rp;
+    try{
+      rp = await change(lastinfo["user"]!, lastinfo["pass"]!);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
       logOut();
       return rp.statusCode;
     }else{
-      return rp.statusCode;
+      return 0;
     }
   }
 }

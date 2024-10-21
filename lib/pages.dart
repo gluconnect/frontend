@@ -18,18 +18,14 @@ class _LogInPageState extends State<LogInPage> {
   Function? callback;
   String message = "";
   _LogInPageState({this.callback});
-  Future<void> doTheThing(MyAppState s, String u, String p) async {
-    //
-    if (islogin) {
+  Future<void> doTheThing(MyAppState s, String u, String p, String n) async{
+    if(islogin){
       FutureOr<int> f = 0;
-      var rep = await s.logIn(u, p).timeout(const Duration(seconds: 5),
-          onTimeout: () {
-        return f;
-      });
-      if (rep == 200) {
-        setState(() {
-          if (callback != null) {
-            callback!(() {
+      var rep = await s.logIn(u, p);
+      if(rep==200){
+        setState((){
+          if(callback!=null){
+            callback!((){
               //
             });
           }
@@ -45,10 +41,11 @@ class _LogInPageState extends State<LogInPage> {
           message = "Something went wrong, please try again later";
         });
       }
-    } else {
-      var rep = await s.register(u, p);
-      if (rep == 200) {
-        setState(() {
+    }
+    else{
+      var rep = await s.register(u, p, n);
+      if(rep==200){
+        setState((){
           message = "Your account has been successfully created";
           islogin = true;
         });
@@ -71,95 +68,108 @@ class _LogInPageState extends State<LogInPage> {
     final formKey = GlobalKey<FormState>();
     TextEditingController userc = TextEditingController();
     TextEditingController passc = TextEditingController();
+    TextEditingController nickc = TextEditingController();
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         child: Column(
           children: [
-            Expanded(
-              child: Form(
-                key: formKey,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        islogin ? 'Log In' : 'Register',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 50),
+            Expanded(child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(islogin?'Log In':'Register', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+                  if(message!="")
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(message),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      controller: userc,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter your email',
                       ),
-                      if (message != "")
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(message),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextFormField(
-                          controller: userc,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter your email',
-                          ),
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                        ),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      obscureText: true,
+                      controller: passc,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter your password',
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextFormField(
-                          obscureText: true,
-                          controller: passc,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter your password',
-                          ),
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  if(!islogin)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter your password again',
                         ),
+                        validator: (String? value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter some text';
+                          }else if(value!=passc.text){
+                            return "Passwords do not match";
+                          }
+                          return null;
+                        },
                       ),
-                      if (!islogin)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            obscureText: true,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Enter your password again',
-                            ),
-                            validator: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              } else if (value != passc.text) {
-                                return "Passwords do not match";
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Validate will return true if the form is valid, or false if
-                            // the form is invalid.
-                            if (formKey.currentState!.validate()) {
-                              //_formKey.currentState.save();
-                              doTheThing(appState, userc.text, passc.text);
-                            }
-                          },
-                          child: const Text('Submit'),
-                        ),
+                    ),
+                  if(!islogin)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      controller: nickc,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter your name',
                       ),
-                    ]),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Validate will return true if the form is valid, or false if
+                        // the form is invalid.
+                        if (formKey.currentState!.validate()) {
+                          //_formKey.currentState.save();
+                          doTheThing(appState, userc.text, passc.text, nickc.text);
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
+                  ),
+                ]
               ),
             ),
             Padding(
@@ -193,18 +203,23 @@ class _HomePageState extends State<HomePage> {
   bool needsupdate =
       true; //fetch readings first TODO(run every 10 seconds or so)
   String errormsg = "";
-  Future<void> fetchLists(MyAppState s) async {
+  bool waitfornext = false;
+  Future<void> fetchLists(MyAppState s)async{
     //var clist = await s.getCaretakers();
+    if(waitfornext)
+      await Future.delayed(Duration(seconds: 5));
     print("starting request");
     var plist = await s.getCaretakers();
     print("request complete");
     if (plist != null) {
       setState(() {
         needsupdate = false;
+        waitfornext = false;
       });
     } else {
       setState(() {
         errormsg = "Something went wrong, please try again later...Retrying";
+        waitfornext = true;
       });
     }
   }
@@ -216,81 +231,134 @@ class _HomePageState extends State<HomePage> {
     var list = appState.glucometers;
     if (isconnecting) {
       final formKey = GlobalKey<FormState>();
-      TextEditingController userc = TextEditingController();
+      TextEditingController timec = TextEditingController();
+      TextEditingController methc = TextEditingController();
+      TextEditingController valc = TextEditingController();
+      TextEditingController mealc = TextEditingController();
+      TextEditingController commc = TextEditingController();
       return Center(
         //child: Container(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Spacer(),
-                ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isconnecting = false;
-                      });
-                    },
-                    child: Icon(Icons.cancel)),
-              ],
-            ),
-            Text(
-              'Connect Glucose Monitor',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                ],
+              ),
+              Text("Add Manual Glucose Reading", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              Container(
+                constraints: const BoxConstraints(maxWidth:400),
                 child: Form(
                   key: formKey,
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (errormsg != "")
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(errormsg),
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if(errormsg!="")
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: userc,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Name',
-                            ),
-                            validator: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              }
-                              return null;
-                            },
-                          ),
+                          child: Text(errormsg),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Validate will return true if the form is valid, or false if
-                              // the form is invalid.
-                              if (formKey.currentState!.validate()) {
-                                //_formKey.currentState.save();
-                                //appState.addReading(timestamp: ?, );
-                                //TODO
-                                setState(() {
-                                  isconnecting = false;
-                                });
-                              }
-                            },
-                            child: const Text('Connect Glucometer'),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: timec,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Time',
                           ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
                         ),
-                      ]),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: methc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Method',
+                          ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: valc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Value',
+                          ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: mealc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Meal Time',
+                          ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: commc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Comments?',
+                          ),
+                          validator: (String? value) {
+                            return null;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Validate will return true if the form is valid, or false if
+                            // the form is invalid.
+                            if (formKey.currentState!.validate()) {
+                              //_formKey.currentState.save();
+                              appState.addReading(timec.text, valc.text, mealc.text, methc.text, commc.text);
+                              //TODO
+                              setState((){isconnecting = false;needsupdate = true;});
+                            }
+                          },
+                          child: const Text('Add Glucose Level Reading'),
+                        ),
+                      ),
+                    ]
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         //),
       );
       //return ElevatedButton(child: Text("Connect Glucometer"), onPressed: (){});
@@ -308,10 +376,7 @@ class _HomePageState extends State<HomePage> {
       return Center(
         child: Column(
           children: [
-            Text(
-              "Home",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
+            Text("Welcome, ${appState.lastinfo['name']}!", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             const Text('No readings available yet'),
             if (appState.glucometers.isEmpty)
               Text(
@@ -330,43 +395,35 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    return ListView(children: <Widget>[
-      Text(
-        "Connect Glucose Monitors",
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text('You have '
-            '${appState.glucometers.length} connected glucose monitors:'),
-      ),
-      for (Glucometer glucometer in appState.glucometers)
-        ListTile(
-          leading: const Icon(Icons.wifi),
-          title: Row(
-            children: [
-              Text(glucometer.name),
-              Spacer(),
-              ElevatedButton(
-                  child: Icon(Icons.settings),
-                  onPressed: () {
-                    appState.deleteGlucometer(glucometer.id);
-                    setState(() {});
-                  })
-            ],
-          ),
+    return ListView(
+      children: <Widget>[
+        Text("Welcome, ${appState.lastinfo['name']}!", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have '
+              '${appState.readings.length} glucose readings'),
         ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                isconnecting = true;
-              });
-            },
-            child: const Icon(Icons.add)),
-      )
-      /*for(WordPair wp in list)
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(onPressed: (){
+            setState((){isconnecting = true;});
+          }, child: const Icon(Icons.add)),
+        ),
+        for (GlucoReading glucometer in appState.readings.reversed)
+          ListTile(
+            leading: const Icon(Icons.wifi),
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(glucometer.timestamp.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(glucometer.meal, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text((glucometer.value).toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(glucometer.measure_method, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(glucometer.comment, style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        /*for(WordPair wp in list)
           BigCard(thing: wp),*/
     ]);
   }
@@ -429,70 +486,39 @@ class _SettingsState extends State<Settings> {
     var appState = context.watch<MyAppState>();
     if (microsettings == 0) {
       return SizedBox.expand(
-        child: Column(
-          children: [
-            Text(
-              "Settings",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
-            if (errormsg != "") Text(errormsg),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(
-                    "Current Name: ",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 25),
+        child: ListView(
+          children:[ IntrinsicHeight(
+            child: Column(
+              children: [
+                Text("Settings", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+                if(errormsg!="")
+                  Text(errormsg),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Text("Current Name: ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+                      Text(appState.lastinfo["name"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+                      ElevatedButton(onPressed: (){setState((){microsettings = 2;});}, child: const Text("Change Name")),
+                    ],
                   ),
-                  Text(
-                    appState.lastinfo["name"]!,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 25),
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          microsettings = 2;
-                        });
-                      },
-                      child: const Text("Change Name")),
-                ],
-              ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(onPressed: (){setState((){microsettings = 3;});}, child: const Text("Change Password")),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(onPressed: (){appState.logOut();if(callback!=null){callback!();}}, child: const Text("Log Out")),
+                ),
+                Spacer(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(onPressed: (){setState((){microsettings = 1;});}, child: const Text("Delete Account")),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      microsettings = 3;
-                    });
-                  },
-                  child: const Text("Change Password")),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                  onPressed: () {
-                    appState.logOut();
-                    if (callback != null) {
-                      callback!();
-                    }
-                  },
-                  child: const Text("Log Out")),
-            ),
-            Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      microsettings = 1;
-                    });
-                  },
-                  child: const Text("Delete Account")),
-            ),
-          ],
+          ),]
         ),
       );
     } else if (microsettings == 1) {
@@ -528,74 +554,64 @@ class _SettingsState extends State<Settings> {
       TextEditingController userc = TextEditingController();
       return Center(
         //child: Container(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Spacer(),
-                ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        microsettings = 0;
-                      });
-                    },
-                    child: Icon(Icons.cancel)),
-              ],
-            ),
-            Text(
-              'Change Account Name',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: Icon(Icons.cancel)),
+                ],
+              ),
+              Text('Change Account Name', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              Container(
+                constraints: const BoxConstraints(maxWidth:400),
                 child: Form(
                   key: formKey,
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (errormsg != "")
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(errormsg),
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if(errormsg!="")
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: userc,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'New Name',
-                            ),
-                            validator: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              }
-                              return null;
-                            },
-                          ),
+                          child: Text(errormsg),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Validate will return true if the form is valid, or false if
-                              // the form is invalid.
-                              if (formKey.currentState!.validate()) {
-                                //_formKey.currentState.save();
-                                changeName(appState, userc.text);
-                              }
-                            },
-                            child: const Text('Change Name'),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: userc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'New Name',
                           ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
                         ),
-                      ]),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Validate will return true if the form is valid, or false if
+                            // the form is invalid.
+                            if (formKey.currentState!.validate()) {
+                              //_formKey.currentState.save();
+                              changeName(appState, userc.text);
+                            }
+                          },
+                          child: const Text('Change Name'),
+                        ),
+                      ),
+                    ]
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         //),
       );
     } else if (microsettings == 3) {
@@ -603,75 +619,65 @@ class _SettingsState extends State<Settings> {
       TextEditingController userc = TextEditingController();
       return Center(
         //child: Container(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Spacer(),
-                ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        microsettings = 0;
-                      });
-                    },
-                    child: Icon(Icons.cancel)),
-              ],
-            ),
-            Text(
-              'Change Account Password',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: Icon(Icons.cancel)),
+                ],
+              ),
+              Text('Change Account Password', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              Container(
+                constraints: const BoxConstraints(maxWidth:400),
                 child: Form(
                   key: formKey,
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (errormsg != "")
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(errormsg),
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if(errormsg!="")
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: userc,
-                            obscureText: true,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'New Password',
-                            ),
-                            validator: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              }
-                              return null;
-                            },
-                          ),
+                          child: Text(errormsg),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Validate will return true if the form is valid, or false if
-                              // the form is invalid.
-                              if (formKey.currentState!.validate()) {
-                                //_formKey.currentState.save();
-                                changePass(appState, userc.text);
-                              }
-                            },
-                            child: const Text('Change Password'),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: userc,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'New Password',
                           ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
                         ),
-                      ]),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Validate will return true if the form is valid, or false if
+                            // the form is invalid.
+                            if (formKey.currentState!.validate()) {
+                              //_formKey.currentState.save();
+                              changePass(appState, userc.text);
+                            }
+                          },
+                          child: const Text('Change Password'),
+                        ),
+                      ),
+                    ]
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         //),
       );
     } else {
@@ -700,36 +706,27 @@ class _ConnectPageState extends State<ConnectPage> {
     if (isconnecting) {
       final formKey = GlobalKey<FormState>();
       TextEditingController userc = TextEditingController();
-      return Center(
-        //child: Container(
-        child: Column(
-          children: [
-            Row(
+      return SingleChildScrollView(
+        child: Center(
+          //child: Container(
+            child: Column(
               children: [
-                Spacer(),
-                ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isconnecting = false;
-                      });
-                    },
-                    child: Icon(Icons.cancel)),
-              ],
-            ),
-            Text(
-              'Connect Glucose Monitor',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-            ),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Expanded(
-                child: Form(
-                  key: formKey,
-                  child: Column(
+                Row(
+                  children: [
+                    Spacer(),
+                    ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                  ],
+                ),
+                Text('Connect Glucose Monitor', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+                Container(
+                  constraints: const BoxConstraints(maxWidth:400),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (errormsg != "")
+                        if(errormsg!="")
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(errormsg),
@@ -750,42 +747,36 @@ class _ConnectPageState extends State<ConnectPage> {
                             },
                           ),
                         ),
-                        SizedBox(
-                            height: 400,
-                            child: ConnectGlucometer(glucometer: glucometer)),
+                        ConnectGlucometer(glucometer: glucometer),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: ElevatedButton(
                             onPressed: () {
                               // Validate will return true if the form is valid, or false if
                               // the form is invalid.
                               if (formKey.currentState!.validate()) {
                                 //_formKey.currentState.save();
-                                if (glucometer['dev'] == null) {
-                                  setState(() {
-                                    errormsg = "Please connect a glucometer";
-                                  });
+                                if(glucometer['dev']==null){
+                                  setState((){errormsg = "Please connect a glucometer";});
                                   return;
                                 }
-                                appState.addGlucometer(
-                                    name: userc.text, dev: glucometer['dev']);
+                                appState.addGlucometer(name: userc.text, dev: glucometer['dev']);
                                 //TODO
-                                // connectGlucometer();
-                                setState(() {
-                                  isconnecting = false;
-                                });
+                                //connectGlucometer();
+                                setState((){isconnecting = false;});
                               }
                             },
                             child: const Text('Connect Glucometer'),
                           ),
                         ),
-                      ]),
+                      ]
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          //),
         ),
-        //),
       );
       //return ElevatedButton(child: Text("Connect Glucometer"), onPressed: (){});
     } else if (list.isEmpty) {
@@ -898,75 +889,64 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
       TextEditingController userc = TextEditingController();
       return Center(
         //child: Container(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Spacer(),
-                ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isconnecting = false;
-                      });
-                    },
-                    child: Icon(Icons.cancel)),
-              ],
-            ),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                ],
+              ),
+              Container(
+                constraints: const BoxConstraints(maxWidth:400),
                 child: Form(
                   key: formKey,
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Authorize User',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 50),
-                        ),
-                        if (errormsg != "")
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(errormsg),
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Authorize User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+                      if(errormsg!="")
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: userc,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Enter other email',
-                            ),
-                            validator: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              }
-                              return null;
-                            },
-                          ),
+                          child: Text(errormsg),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Validate will return true if the form is valid, or false if
-                              // the form is invalid.
-                              if (formKey.currentState!.validate()) {
-                                //_formKey.currentState.save();
-                                addUser(appState, userc.text);
-                              }
-                            },
-                            child: const Text('Submit'),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: userc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter other email',
                           ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
                         ),
-                      ]),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Validate will return true if the form is valid, or false if
+                            // the form is invalid.
+                            if (formKey.currentState!.validate()) {
+                              //_formKey.currentState.save();
+                              addUser(appState, userc.text);
+                            }
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ),
+                    ]
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         //),
       );
     } else {
@@ -1099,20 +1079,25 @@ class CaretakerList extends StatefulWidget {
 class _CaretakerListState extends State<CaretakerList> {
   Function? callback;
   bool needsupdate = true;
+  bool waitfornext = false;
   String errormsg = "";
   _CaretakerListState({this.callback});
   Future<void> fetchLists(MyAppState s) async {
     //var clist = await s.getCaretakers();
+    if(waitfornext)
+      await Future.delayed(Duration(seconds: 5));
     print("starting request");
     var plist = await s.getCaretakers();
     print("request complete");
     if (plist != null) {
       setState(() {
         needsupdate = false;
+        waitfornext = false;
       });
     } else {
       setState(() {
         errormsg = "Something went wrong, please try again later...Retrying";
+        waitfornext = true;
       });
     }
   }
@@ -1127,6 +1112,8 @@ class _CaretakerListState extends State<CaretakerList> {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          if(errormsg!="")
+            Text(errormsg),
           Text("Loading..."),
         ],
       );
@@ -1193,5 +1180,12 @@ class _CaretakerListState extends State<CaretakerList> {
       /*for(WordPair wp in list)
           BigCard(thing: wp),*/
     ]);
+  }
+}
+
+class ModForm extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+    return Placeholder();
   }
 }

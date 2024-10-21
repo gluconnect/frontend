@@ -145,13 +145,13 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                 : !isscanning && bleDevices.isEmpty
                     ? Placeholder()
                     : ListView.separated(
+                        shrinkWrap: true,
                         itemBuilder: (context, index) {
                           BleDevice dev =
                               bleDevices[bleDevices.length - index - 1];
                           return Text(dev.deviceId);
                         },
                         separatorBuilder: (context, index) => Divider(),
-                        shrinkWrap: true,
                         itemCount: bleDevices.length))
       ],
     );

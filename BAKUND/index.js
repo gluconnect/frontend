@@ -25,11 +25,6 @@ var Users = [{
         id: 'jack2',
         name: "jackk2",
         password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'
-    },
-    {
-	id: "stan",
-	name: "Stanley",
-	password: "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
     }];
 function toReading(x) {
     var glooc = {
@@ -65,6 +60,7 @@ function serializeReading(x) {
     var minutes = String(date.getMinutes()).padStart(2, '0');
     var seconds = String(date.getSeconds()).padStart(2, '0');
     glooc.timestamp = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+    return glooc;
 }
 //NumerIt code
 function hash(value) {
@@ -81,7 +77,7 @@ app.post('/register', function (req, res) {
             res.sendStatus(401);
         }
         else {
-            Users.push({ id: req.body.email, password: hash(req.body.password), name: req.body.email /*TODO*/ });
+            Users.push({ id: req.body.email, password: hash(req.body.password), name: req.body.name });
             console.log(Users);
             res.sendStatus(200);
         }
@@ -146,6 +142,7 @@ app.post('/add_reading', checkLogin, function (req, res) {
         if (!user.readings)
             user.readings = [];
         user.readings.push(toReading(req.body));
+        console.log(user.readings);
         res.sendStatus(200);
     }
 });
@@ -155,6 +152,12 @@ app.post('/get_readings', checkLogin, function (req, res) {
     if (!user.readings)
         user.readings = [];
     res.status(200).json(user.readings.map(function (i) { return serializeReading(i); }));
+});
+app.post('/clear_readings', checkLogin, function (req, res) {
+    var user = getUser(req);
+    console.log(user.readings);
+    user.readings = [];
+    res.sendStatus(200);
 });
 app.post('/spectate_readings', checkLogin, function (req, res) {
     var user = getUser(req);
