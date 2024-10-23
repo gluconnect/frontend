@@ -9,9 +9,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:convert';
 class BigPharma{
-  static var service = "0x180A";
-  static var indexchange = "0x1";
-  static var tocomm = "0x2";
+  static var service = "A07498CA-AD58-474E-940D-16F1FBE7E8CD";
+  static var indexchange = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B";
+  static var tocomm = "bfc0c92f-317d-4ba9-976b-cc11ce77b4ca";
 }
 class Glucometer{
   static var count = 1;
