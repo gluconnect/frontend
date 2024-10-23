@@ -7,6 +7,49 @@ import 'brains.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
+class BigPharma{
+  static var service = "0x180A";
+}
+class Glucometer{
+  static var count = 1;
+  Glucometer({this.id = 0, this.name = "Glucometer", this.meter});
+  String name = "HELLOWORLD";
+  int id;
+  BleDevice? meter;
+  BleService? reads;
+  Future<bool> connect() async{
+    if(meter==null){
+      return false;
+    }
+    var deviceId = meter!.deviceId;
+    print("Device found "+deviceId);
+    await UniversalBle.connect(deviceId);
+    print("Device connected");
+    List<BleService> b = await UniversalBle.discoverServices(deviceId);
+    print("Services obtained");
+    reads = b.firstWhere((t)=>t.uuid==BigPharma.service);
+    if(reads==null){
+      return false;
+    }
+    print("Service id "+reads!.uuid);
+    //
+    return true;
+  }
+  Future<bool> update(MyAppState s) async{
+    if(meter==null){
+      return true;
+    }
+    BleConnectionState isconnected = await meter!.connectionState;
+    if(isconnected!=BleConnectionState.connected){
+      bool worked = await connect();
+      //TODO call error if failed
+      return false;
+    }
+    //TODO get reading
+    Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, '0000-00001-'+meter!.deviceId);
+    return true;
+  }
+}
 class ConnectGlucometer extends StatefulWidget{
   Map<String, BleDevice?>? glucometer;
   ConnectGlucometer({super.key, this.glucometer});
@@ -37,6 +80,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
     UniversalBle.onScanResult = (res){
       int i = bleDevices.indexWhere((e)=>e.deviceId==res.deviceId);
       if(i==-1){
+        bleDevices.clear();
         bleDevices.add(res);//add to list of options if not already there
       }else{
         if(res.name==null&&bleDevices[i].name!=null){
@@ -66,7 +110,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                 try{
                   await UniversalBle.startScan(
                     scanFilter: ScanFilter(
-                      withServices: ["0x1808"]
+                      withServices: [BigPharma.service]
                     )
                   );
                 }catch(e){
@@ -117,10 +161,10 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
         Container(child: isscanning&&bleDevices.isEmpty
           ? Center(child: CircularProgressIndicator.adaptive())
           : !isscanning&&bleDevices.isEmpty
-            ? Placeholder()
+            ? Text("Try connecting devices first")
             : ListView.separated(shrinkWrap: true, itemBuilder: (context, index){
                 BleDevice dev = bleDevices[bleDevices.length-index-1];
-                return Text(dev.deviceId);
+                return Text((index==0?"This device will be connected: ":"")+(dev.name!=null?dev.name!:dev.deviceId));
               }, separatorBuilder: (context, index)=>Divider(), itemCount: bleDevices.length)
         )
       ],
@@ -128,26 +172,27 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   }
 }
 class Midget extends StatefulWidget{
+  Function callback;
+  Midget({super.key, required this.callback});
   @override
-  State<Midget> createState() => _MidgetState();
+  State<Midget> createState() => _MidgetState(callback: callback);
 }
 
 class _MidgetState extends State<Midget> {
-  Timer? timer;
-  Function? callback;
-  @override
-  void initState() {
-    super.initState();
-    timer = Timer.periodic(Duration(seconds: 15), (timer){callback!();});
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
+  Function callback;
+  _MidgetState({required this.callback});
+  Future<void> update() async{
+    await Future.delayed(Duration(seconds: 15));
+    callback();
+    setState((){});
   }
   @override
   Widget build(BuildContext context){
+    UniversalBle.onConnectionChange = (String deviceId, bool isConnected, String? error) {
+      //TODO: tell user device disconnected
+    };
+    callback();
+    update();
     return SizedBox.shrink();
   }
 }

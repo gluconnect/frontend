@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'redbone.dart';
 class Caretaker{
   static var count = 1;
   Caretaker({this.id = "", this.name = "Glucometer"});
@@ -14,13 +15,6 @@ class Patient{
   Patient({this.id = "", this.name = "Glucometer"});
   String name = "HELLOWORLD";
   String id;//email
-}
-class Glucometer{
-  static var count = 1;
-  Glucometer({this.id = 0, this.name = "Glucometer", this.meter});
-  String name = "HELLOWORLD";
-  int id;
-  BleDevice? meter;
 }
 class GlucoReading{
   DateTime timestamp = DateTime(0);
@@ -57,6 +51,11 @@ class MyAppState extends ChangeNotifier {
   void addGlucometer({String name = "", BleDevice? dev}){
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
+  }
+  Future<void> updateGlucometers() async{
+    for(Glucometer g in glucometers){
+      bool res = await g.update(this);
+    }
   }
   Future<http.Response> tagTimeout(Future<http.Response> r){
     return r.timeout(Duration(seconds: 5));
@@ -382,6 +381,85 @@ ishttpying = false;
       return null;
     }
   }
+  Future<String?> getPatientName(otheremail) async{
+    Future<http.Response> getRD(String u, String p, String o) async {
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/get_patient_name'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+          'uemail': o
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      String s = rp.body;
+      print("name obtained: "+s);
+      //lastinfo['othreshold'] = threshold.toString();
+      return s;
+    }else{
+      return null;
+    }
+  }
+  Future<String?> getCaretakerName(otheremail) async{
+    Future<http.Response> getRD(String u, String p, String o) async {
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/get_user_name'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': u,
+          'password': p,
+          'uemail': o
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      String s = rp.body;
+      //lastinfo['othreshold'] = threshold.toString();
+      return s;
+    }else{
+      return null;
+    }
+  }
   Future<double?> getThreshold() async{
     Future<http.Response> getRD(String u, String p) async {
       ishttpying = true;
@@ -457,6 +535,44 @@ ishttpying = false;
       double threshold = double.parse(rp.body);
       lastinfo['othreshold'] = threshold.toString();
       return threshold;
+    }else{
+      return null;
+    }
+  }
+  Future<double?> changeThreshold(double nname) async{
+    Future<http.Response> change(String u, String p, double nname) async {
+      print(u+" "+p);
+      ishttpying = true;
+final http.Response response = await tagTimeout(http.post(
+        Uri.parse('$URL/change_threshold'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'email': u,
+          'password': p,
+          'threshold': nname
+        }),
+      ));
+ishttpying = false;
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return response;// as Map<String, String>;
+      } else if (response.statusCode == 401){
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        return response;//throw Exception('Failed to load album');
+      }else{
+        return response;
+      }
+    }
+    http.Response? rp;
+    try{
+      rp = await change(lastinfo["user"]!, lastinfo["pass"]!, nname);
+    } catch(e){print(e);}
+    if(rp!=null&&rp!.statusCode==200){
+      return double.parse(rp.body);
     }else{
       return null;
     }
@@ -539,7 +655,7 @@ ishttpying = false;
       return null;
     }
   }
-  Future<int> logIn(username, password) async{
+  Future<int> logIn(username, password, serv) async{
     print("${"User: "+username} Password: "+password);
     Future<int> logIn(String u, String p) async {
       ishttpying = true;
@@ -569,6 +685,7 @@ ishttpying = false;
       }
     }
     int rp = 500;
+    URL = serv;
     try{
       rp = await logIn(username, password);
     } catch(e){print(e);

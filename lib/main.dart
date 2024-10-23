@@ -104,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   type: BottomNavigationBarType.fixed,
                 ),
               ),
+              Midget(callback: (){print("MIDGET!!");appState.updateGlucometers();})
             ],
           ),
         );

@@ -17,10 +17,10 @@ class _LogInPageState extends State<LogInPage> {
   Function? callback;
   String message = "";
   _LogInPageState({this.callback});
-  Future<void> doTheThing(MyAppState s, String u, String p, String n) async{
+  Future<void> doTheThing(MyAppState s, String u, String p, String n, String v) async{
     if(islogin){
       FutureOr<int> f = 0;
-      var rep = await s.logIn(u, p);
+      var rep = await s.logIn(u, p, v);
       if(rep==200){
         setState((){
           if(callback!=null){
@@ -63,6 +63,7 @@ class _LogInPageState extends State<LogInPage> {
     TextEditingController userc = TextEditingController();
     TextEditingController passc = TextEditingController();
     TextEditingController nickc = TextEditingController();
+    //TextEditingController nick2c = TextEditingController();
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth:400),
@@ -149,6 +150,20 @@ class _LogInPageState extends State<LogInPage> {
                       },
                     ),
                   ),
+                  /*Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      controller: nick2c,
+                      initialValue: appState.URL,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter server url',
+                      ),
+                      validator: (String? value) {
+                        return null;
+                      },
+                    ),
+                  ),*/
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: ElevatedButton(
@@ -157,7 +172,7 @@ class _LogInPageState extends State<LogInPage> {
                         // the form is invalid.
                         if (formKey.currentState!.validate()) {
                           //_formKey.currentState.save();
-                          doTheThing(appState, userc.text, passc.text, nickc.text);
+                          doTheThing(appState, userc.text, passc.text, nickc.text, appState.URL/*nick2c.text*/);
                         }
                       },
                       child: const Text('Submit'),
@@ -185,7 +200,12 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 }
-
+bool isNumeric(String s) {
+ if (s == null) {
+   return false;
+ }
+ return double.tryParse(s) != null;
+}
 class HomePage extends StatefulWidget{
   String oemail;
   HomePage({super.key, this.oemail = ""});
@@ -198,8 +218,10 @@ class _HomePageState extends State<HomePage> {
   bool needsupdate = true;//fetch readings first TODO(run every 10 seconds or so)
   String errormsg = "";
   bool waitfornext = false;
+  bool nthres = false;
   List? plist = [];
   double currthres = 0;
+  String currname = "";
   String oemail;
   _HomePageState({this.oemail = ""});
   Future<void> fetchLists(MyAppState s)async{
@@ -207,14 +229,22 @@ class _HomePageState extends State<HomePage> {
     if(waitfornext)
       await Future.delayed(Duration(seconds: 5));
     print("starting request for readings of "+oemail);
+    //await s.getPatientWarnings();
     double? cthres;
+    String? cname;
     if(oemail==""){
       plist = await s.getReadings();
       print("Readings get!");
       cthres = await s.getThreshold();
+      currname = s.lastinfo['name']!;
     }else{
       plist = await s.spectateReadings(oemail);
       cthres = await s.spectateThreshold(oemail);
+      cname = await s.getPatientName(oemail);
+      if(cname!=null){
+        print("changing patient view name");
+        currname = cname!;
+      }
     }
     print("request complete");
     if(plist!=null&&cthres!=null){
@@ -230,12 +260,108 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+  Future<void> addReading(MyAppState s, timec, valc, mealc, methc, commc)async{
+    int result = await s.addReading(timec, valc, mealc, methc, commc);
+    if(result==200){
+      setState((){
+        needsupdate = true;
+      });
+    }else{
+      setState((){
+        errormsg = "NO";
+      });
+    }
+  }
+  Future<void> changeThreshold(MyAppState s, double timec)async{
+    double? result = await s.changeThreshold(timec);
+    if(result!=null){
+      currthres = result;
+      setState((){
+        needsupdate = true;
+        nthres = false;
+        errormsg = "Threshold updated successfully";
+      });
+    }else{
+      setState((){
+        errormsg = "Something went wrong...";
+      });
+    }
+  }
   @override
   Widget build(BuildContext context){
     var appState = context.watch<MyAppState>();
-    String title = oemail==""?"Welcome, ${appState.lastinfo['name']}!":"Viewing "+oemail+"'s readings";
+    String oname = currname;
+    String title = oemail==""?"Welcome, $oname!":"Viewing "+oname+"'s readings";
     //appState.addGlucometers();
-    if(isconnecting){
+    if(nthres){
+      final formKey = GlobalKey<FormState>();
+      TextEditingController userc = TextEditingController();
+      return Center(
+        //child: Container(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(onPressed: (){setState((){nthres = false;});}, child: Icon(Icons.cancel)),
+                ],
+              ),
+              Text('Set Warning Threshold', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              Container(
+                constraints: const BoxConstraints(maxWidth:400),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if(errormsg!="")
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(errormsg),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: userc,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'New Warning Threshold',
+                          ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }else if(!isNumeric(value)||double.parse(value)<0){
+                              return 'Should be a non-negative number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Validate will return true if the form is valid, or false if
+                            // the form is invalid.
+                            if (formKey.currentState!.validate()) {
+                              //_formKey.currentState.save();
+                              changeThreshold(appState, double.parse(userc.text));
+                            }
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ),
+                    ]
+                  ),
+                ),
+              ),
+            ],
+          ),
+        //),
+      );
+    }
+    else if(isconnecting){
       final formKey = GlobalKey<FormState>();
       TextEditingController timec = TextEditingController();
       TextEditingController methc = TextEditingController();
@@ -351,7 +477,7 @@ class _HomePageState extends State<HomePage> {
                             // the form is invalid.
                             if (formKey.currentState!.validate()) {
                               //_formKey.currentState.save();
-                              appState.addReading(timec.text, valc.text, mealc.text, methc.text, commc.text);
+                              addReading(appState, timec.text, valc.text, mealc.text, methc.text, commc.text);
                               //TODO
                               setState((){isconnecting = false;needsupdate = true;});
                             }
@@ -376,15 +502,13 @@ class _HomePageState extends State<HomePage> {
           Text("Loading..."),
         ],
       );
-    }else if(errormsg!=""){
-      return Text(errormsg);
     }else if (plist!.isEmpty) {
       return Center(
         child: Column(
           children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             const Text('No readings available yet'),
-            if(appState.glucometers.isEmpty)
+            if(appState.glucometers.isEmpty&&oemail=="")
               Text("You have no connected glucose monitors...Go to the connect tab to connect one"),
             if(oemail=="")Padding(
               padding: const EdgeInsets.all(8.0),
@@ -403,20 +527,22 @@ class _HomePageState extends State<HomePage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(currthres<0?"Set a Warning Threshold Now!":"Your current warning threshold is:", style: TextStyle(fontSize: 25)),
+              Text(oemail==""?(currthres<0?"Set a Warning Threshold Now!":"Your current warning threshold is:"):(currthres<0?oname+" does not have a warning threshold set yet!":oname+"'s warning threshold is:"), style: TextStyle(fontSize: 25)),
             ],
           ),
         ),
         if(currthres>=0)Center(child: Text(currthres.toString(), style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),),
-        Center(
+        if(oemail=="")Center(
           child: ElevatedButton(onPressed: (){
+            setState((){
+              nthres = true;
+            });
           }, child: Text(currthres<0?"Set Threshold":"Change")),
         ),
         Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Text('You have '
-                '${appState.readings.length} glucose readings'),
+            child: Text((oemail==""?"You have":oname+" has")+' ${plist!.length} glucose readings'),
           ),
         ),
         if(oemail=="")Center(
@@ -444,7 +570,7 @@ class _HomePageState extends State<HomePage> {
               for(int i = 0; i < 5; i++)
                 Divider(color: Colors.black, thickness: 2.0),
             ]),
-        for (GlucoReading glucometer in appState.readings.reversed)
+        for (GlucoReading glucometer in plist!.reversed)
           TableRow(
               children: [
                 Text(glucometer.timestamp.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -877,7 +1003,7 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
             ElevatedButton(onPressed: (){setState((){spectate = "";});}, child: Icon(Icons.cancel)),
           ],
         ),
-        HomePage(oemail: spectate)
+        Expanded(child: HomePage(oemail: spectate))
       ],);
     }else if(isconnecting){
       final formKey = GlobalKey<FormState>();
