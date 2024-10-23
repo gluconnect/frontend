@@ -7,8 +7,11 @@ import 'brains.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
+import 'dart:convert';
 class BigPharma{
   static var service = "0x180A";
+  static var indexchange = "0x1";
+  static var tocomm = "0x2";
 }
 class Glucometer{
   static var count = 1;
@@ -46,7 +49,17 @@ class Glucometer{
       return false;
     }
     //TODO get reading
-    Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, '0000-00001-'+meter!.deviceId);
+    Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.tocomm);
+    int n = us[0];
+    Map m = jsonDecode(String.fromCharCodes(us));
+    for(int i = 0; i < n; i++){
+      await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, Uint8List.fromList([i]), BleOutputProperty.withResponse);
+      GlucoReading r = GlucoReading(String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange)));
+      if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
+        s.readings.add(r);
+        s.scheduleUpdate();
+      }
+    }
     return true;
   }
 }

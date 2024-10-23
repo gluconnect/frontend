@@ -42,20 +42,28 @@ class MyAppState extends ChangeNotifier {
   List glucometers = <Glucometer>[];
   List caretakers = <Caretaker>[];
   List patients = <Patient>[];
-  List readings = <GlucoReading>[];
+  List<GlucoReading> readings = <GlucoReading>[];
   List readings2 = <GlucoReading>[];
   var lastinfo = {"user": "", "pass": "", "name": ""};
   var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
+  bool updatepage = false;
   void addGlucometer({String name = "", BleDevice? dev}){
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
   }
-  Future<void> updateGlucometers() async{
+  Future<void> updateGlucometers(Function callback) async{
+    updatepage = false;
     for(Glucometer g in glucometers){
       bool res = await g.update(this);
     }
+    if(updatepage){
+      callback();
+    }
+  }
+  void scheduleUpdate(){
+    updatepage = true;
   }
   Future<http.Response> tagTimeout(Future<http.Response> r){
     return r.timeout(Duration(seconds: 5));

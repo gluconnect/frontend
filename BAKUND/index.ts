@@ -173,7 +173,20 @@ app.post('/add_reading', checkLogin, (req, res)=>{
   }else{
     let user = getUser(req);
     if(!user.readings)user.readings = [];
-    user.readings.push(toReading(req.body));
+    let reading;
+    try{
+      reading = toReading(req.body);
+    }catch(e){
+      return;
+    }
+    user.readings.push(reading);
+    if(user.threshold&&req.body.value>user.threshold&&user.viewers){
+      for(let v of user.viewers){
+        let u = getUser({body:{email:v.email}});
+        if(!u.warnings)u.warnings = [];
+        u.warnings.push({email: user?.id, reading: reading});
+      }
+    }
     console.log(user.readings);
     res.sendStatus(200);
   }

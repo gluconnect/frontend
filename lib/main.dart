@@ -63,6 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
+    Function ss = setState;
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
@@ -104,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   type: BottomNavigationBarType.fixed,
                 ),
               ),
-              Midget(callback: (){print("MIDGET!!");appState.updateGlucometers();})
+              Midget(callback: (){print("MIDGET!!");appState.updateGlucometers((){ss((){});});})
             ],
           ),
         );
