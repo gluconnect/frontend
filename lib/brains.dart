@@ -43,7 +43,10 @@ class MyAppState extends ChangeNotifier {
   List caretakers = <Caretaker>[];
   List patients = <Patient>[];
   List<GlucoReading> readings = <GlucoReading>[];
+  bool readingscorrect = false;
   List patientreadings = <GlucoReading>[];
+  bool patientreadingscorrect = false;
+  String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
   //var URL = "http://occidentalis.local:8008";
   var URL = "http://localhost:8008";
@@ -119,6 +122,7 @@ ishttpying = false;
       print("suxes "+ss.toString());
       nup = true;
       readings.add(GlucoReading(ss));
+      readingscorrect = false;
       print(readings);
       notifyListeners();
     }else{
@@ -359,6 +363,8 @@ ishttpying = false;
       print(res);
       try{readings = res.map((v)=>GlucoReading(v)).toList();}catch(e){print(e); return null;}
       print(readings);
+      readingscorrect = true;
+      notifyListeners();
       return readings;
     }else{
       return null;
@@ -397,7 +403,9 @@ ishttpying = false;
     } catch(e){print(e);}
     if(rp!=null&&rp!.statusCode==200){
       List<dynamic> res = jsonDecode(rp.body);
-      try{patientreadings = res.map((v)=>GlucoReading(v)).toList();print(patientreadings);}catch(e){return null;}
+      try{patientreadings = res.map((v)=>GlucoReading(v)).toList();print(patientreadings);}catch(e){print(e);return null;}
+      patientreadingscorrect = true;
+      notifyListeners();
       return patientreadings;
     }else{
       return null;
@@ -758,6 +766,8 @@ ishttpying = false;
     lastinfo["user"] = "";
     lastinfo["pass"] = "";
     userIsAuthed = false;
+    readings = [];
+    readingscorrect = false;
   }
   Future<int> deleteAccount() async{
     Future<http.Response> change(String u, String p) async {

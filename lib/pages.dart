@@ -220,7 +220,6 @@ class _HomePageState extends State<HomePage> {
   String errormsg = "";
   bool waitfornext = false;
   bool nthres = false;
-  List? plist = [];
   double currthres = 0;
   String currname = "";
   String oemail;
@@ -235,12 +234,12 @@ class _HomePageState extends State<HomePage> {
     double? cthres;
     String? cname;
     if(oemail==""){
-      plist = await s.getReadings();
       print("Readings get!");
+      await s.getReadings();
       cthres = await s.getThreshold();
       currname = s.lastinfo['name']!;
     }else{
-      plist = await s.spectateReadings(oemail);
+      await s.spectateReadings(oemail);
       cthres = await s.spectateThreshold(oemail);
       cname = await s.getPatientName(oemail);
       if(cname!=null){
@@ -249,7 +248,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
     print("request complete");
-    if(plist!=null&&cthres!=null){
+    /*if(cthres!=null){
       currthres = cthres;
       setState((){
         needsupdate = false;
@@ -260,7 +259,7 @@ class _HomePageState extends State<HomePage> {
         errormsg = "Something went wrong, please try again later...Retrying";
         waitfornext = true;
       });
-    }
+    }*/
   }
   Future<void> addReading(MyAppState s, DateTime timec, double valc, mealc, methc, commc)async{
     int result = await s.addReading(timec, valc, mealc, methc, commc);
@@ -291,9 +290,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context){
     var appState = context.watch<MyAppState>();
-    appState.addListener((){setState((){needsupdate = true;});});
+    appState.addListener((){setState((){});});
     String oname = currname;
     String title = oemail==""?"Welcome, $oname!":"Viewing "+oname+"'s readings";
+    List plist = oemail==""?appState.readings:appState.patientreadings;
+    bool needsupdate = !(oemail==""?appState.readingscorrect:(appState.lastreadingsemail==oemail&&appState.patientreadingscorrect));
     //appState.addGlucometers();
     if(nthres){
       final formKey = GlobalKey<FormState>();
@@ -496,7 +497,7 @@ class _HomePageState extends State<HomePage> {
         //),
       );
       //return ElevatedButton(child: Text("Connect Glucometer"), onPressed: (){});
-    }else if (needsupdate||plist==null){
+    }else if (needsupdate){
       fetchLists(appState);
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -504,7 +505,7 @@ class _HomePageState extends State<HomePage> {
           Text("Loading..."),
         ],
       );
-    }else if (plist!.isEmpty) {
+    }else if (plist.isEmpty) {
       return Center(
         child: Column(
           children: [

@@ -199,11 +199,11 @@ app.post('/clear_readings', checkLogin, function (req, res) {
 });
 app.post('/spectate_readings', checkLogin, function (req, res) {
     var user = getUser(req);
-    if (!user.patients.some(function (v) { return v.email == req.uemail; })) { //make sure user authorizes patient.
+    if (!user.patients.some(function (v) { return v.email == req.body.uemail; })) { //make sure user authorizes patient.
         res.sendStatus(401);
         return;
     }
-    var u = getUser({ body: { email: req.uemail } });
+    var u = getUser({ body: { email: req.body.uemail } });
     res.status(200).json(u.readings.map(function (i) { return serializeReading(i); }));
 });
 app.post('/get_viewers', checkLogin, function (req, res) {
