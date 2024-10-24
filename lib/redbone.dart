@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 class BigPharma{
-  static var service = BleUuidParser.string("A07498CA-AD58-474E-940D-16F1FBE7E8CD");
+  static var service = BleUuidParser.string("A07498CA-AD5B-474E-940D-16F1FBE7E8CD");
   static var indexchange = BleUuidParser.string("51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B");
   static var tocomm = BleUuidParser.string("bfc0c92f-317d-4ba9-976b-cc11ce77b4ca");
 }
