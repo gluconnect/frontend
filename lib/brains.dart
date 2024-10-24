@@ -24,13 +24,13 @@ class GlucoReading{
   String  measure_method = "blood sample";
   Map<String, dynamic>? extra_data;
   GlucoReading(dynamic thing){
-    timestamp = DateTime.parse(thing['timestamp']);
-    value = double.parse(thing['value']);
+    timestamp = DateTime.parse(thing['time']);
+    value = thing['value'];
     meal = thing['meal'];
     if(true){
       comment = thing['comment'];
     }
-    measure_method = thing['measure_method'];
+    measure_method = thing['measure_method']!;
     extra_data = null;//thing['extra_data'];
   }
 }
@@ -53,7 +53,7 @@ class MyAppState extends ChangeNotifier {
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
   }
-  Future<String> updateGlucometers(Function callback) async{
+  Future<String> updateGlucometers() async{
     updatepage = false;
     String ress = "";
     for(Glucometer g in glucometers){
@@ -61,7 +61,6 @@ class MyAppState extends ChangeNotifier {
       ress+=res+";";
     }
     if(updatepage){
-      callback(ress);
     }
     print("BLESS: "+ress);
     return ress;

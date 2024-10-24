@@ -19,6 +19,7 @@ class Glucometer{
   Glucometer({this.id = 0, this.name = "Glucometer", this.meter});
   String name = "HELLOWORLD";
   int id;
+  int lastsuccessfulindex = 0;
   BleDevice? meter;
   BleService? reads;
   Future<bool> connect() async{
@@ -60,11 +61,13 @@ class Glucometer{
     int n = decodeNum(us);
     fin+="num readings: "+n.toString()+",";
     //Map m = jsonDecode(String.fromCharCodes(us));
-    for(int i = 0; i < n; i++){
+    for(int i = lastsuccessfulindex; i < n; i++){
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);
       fin+="requesting reading "+i.toString()+",";
       print("request reading "+i.toString());
-      GlucoReading r = GlucoReading(String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange)));
+      String st = String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange));
+      print ("raw reading "+st);
+      GlucoReading r = GlucoReading(jsonDecode(st));
       print("REAADING OBTAINED: "+[r.timestamp, r.value, r.meal, r.measure_method, r.comment].toString()+",");
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
@@ -72,6 +75,7 @@ class Glucometer{
         s.scheduleUpdate();
       }
     }
+    lastsuccessfulindex = n;
     return fin;
   }
   Uint8List encodeNum(int i){

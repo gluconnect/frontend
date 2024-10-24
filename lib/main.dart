@@ -16,12 +16,12 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'GLUCOTESTF',
+        title: 'GLUCONNECT',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
         ),
-        home: MyHomePage(),
+        home: MyFatHomePage(),
       ),
     );
   }
@@ -105,12 +105,26 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   type: BottomNavigationBarType.fixed,
                 ),
-              ),
-              Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers((s){m = s;ss((){});});})
+              )
             ],
           ),
         );
       }
     );
+  }
+}
+class MyFatHomePage extends StatefulWidget{
+  @override
+  State<MyFatHomePage> createState() => _MyFatHomePageState();
+}
+
+class _MyFatHomePageState extends State<MyFatHomePage> {
+  String m = "Adios";
+
+  @override
+  Widget build(BuildContext ctx){
+    MyAppState appState = ctx.watch<MyAppState>();
+    return Column(children: [Expanded(child: MyHomePage()),
+    Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers();})]);
   }
 }
