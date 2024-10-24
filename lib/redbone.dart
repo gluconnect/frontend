@@ -125,6 +125,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
         Row(
           children: [
             ElevatedButton(child: isscanning?Text("Stop Search"):Text("Search for Glucometers"), onPressed: () async{
+              PermissionHandler.errorJunk = "";
               if(!isscanning){
                 setState(() {
                   bleDevices.clear();
@@ -241,6 +242,7 @@ class _MidgetState extends State<Midget> {
   }
 }
 class PermissionHandler {
+  static String errorJunk = "";
   static Future<bool> arePermissionsGranted() async {
     if (!isMobilePlatform) return true;
 
@@ -254,7 +256,7 @@ class PermissionHandler {
       PermissionStatus blePermissionCheck =
           await Permission.bluetooth.request();
       if (blePermissionCheck.isPermanentlyDenied) {
-        print("Bluetooth Permission Permanently Denied");
+        errorJunk+="Bluetooth Permission Permanently Denied; ";
         openAppSettings();
       }
       return false;
@@ -264,7 +266,7 @@ class PermissionHandler {
       PermissionStatus locationPermissionCheck =
           await Permission.location.request();
       if (locationPermissionCheck.isPermanentlyDenied) {
-        print("Location Permission Permanently Denied");
+        errorJunk+="Location Permission Permanently Denied; ";
         openAppSettings();
       }
       return false;
@@ -285,6 +287,7 @@ class PermissionHandler {
 
       blePermissionGranted = bleConnectPermission && bleScanPermission;
       locationPermissionGranted = true;
+      errorJunk+="Required Android BLE perms; ";
     } else {
       PermissionStatus permissionStatus = await Permission.bluetooth.request();
       blePermissionGranted = permissionStatus.isGranted;
@@ -292,6 +295,7 @@ class PermissionHandler {
           ? (await Permission.locationWhenInUse.request()).isGranted
           : true;
     }
+    errorJunk+="Permission status: location->"+locationPermissionGranted.toString()+", connect->"+blePermissionGranted.toString()+"; ";
     return [locationPermissionGranted, blePermissionGranted];
   }
 
