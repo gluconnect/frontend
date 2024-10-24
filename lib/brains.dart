@@ -48,25 +48,24 @@ class MyAppState extends ChangeNotifier {
   var URL = "http://occidentalis.local:8008";
   var servdowncode = 501;
   var ishttpying = false;
-  bool updatepage = false;
+  bool istoothing = false;
   void addGlucometer({String name = "", BleDevice? dev}){
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
   }
   Future<String> updateGlucometers() async{
-    updatepage = false;
+    if(istoothing){
+      return "PRevious reading not done!!!!!!";
+    }
+    istoothing = true;
     String ress = "";
     for(Glucometer g in glucometers){
       String res = await g.update(this);
       ress+=res+";";
     }
-    if(updatepage){
-    }
     print("BLESS: "+ress);
+    istoothing = false;
     return ress;
-  }
-  void scheduleUpdate(){
-    updatepage = true;
   }
   Future<http.Response> tagTimeout(Future<http.Response> r){
     return r.timeout(Duration(seconds: 5));
@@ -80,7 +79,7 @@ final response = await tagTimeout(http.post(
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, String>{
+        body: jsonEncode(<String, dynamic>{
           'email': u,
           'password': p,
           'time': timestamp,

@@ -72,7 +72,7 @@ class Glucometer{
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
         fin+="Sending new info to serv,";
-        s.scheduleUpdate();
+        //s.scheduleUpdate();
       }
     }
     lastsuccessfulindex = n;
