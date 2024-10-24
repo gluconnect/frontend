@@ -262,9 +262,10 @@ class _HomePageState extends State<HomePage> {
   }
   Future<void> addReading(MyAppState s, timec, valc, mealc, methc, commc)async{
     int result = await s.addReading(timec, valc, mealc, methc, commc);
+    print("reading appears");
     if(result==200){
       setState((){
-        needsupdate = true;
+        needsupdate = false;
       });
     }else{
       setState((){

@@ -45,7 +45,8 @@ class MyAppState extends ChangeNotifier {
   List<GlucoReading> readings = <GlucoReading>[];
   List readings2 = <GlucoReading>[];
   var lastinfo = {"user": "", "pass": "", "name": ""};
-  var URL = "http://occidentalis.local:8008";
+  //var URL = "http://occidentalis.local:8008";
+  var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
   bool istoothing = false;
@@ -104,7 +105,7 @@ ishttpying = false;
     int rp = 500;
     try{
       print("ADDDDDD");
-      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
+      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value2, meal, method, comments);
     } catch(e){print(e);}
     if(rp==200){
       readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
