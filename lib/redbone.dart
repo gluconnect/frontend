@@ -152,13 +152,16 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
             if(BleCapabilities.supportsBluetoothEnableApi&&avSt==AvailabilityState.poweredOff)
               ElevatedButton(onPressed: () async{
                 bool v = await UniversalBle.enableBluetooth();
-                err("Enabled? $v");
+                err("Bootuth Enabled? $v");
                 setState((){});
               }, child: Text("Enable Bluetooth")),
             if(BleCapabilities.requiresRuntimePermission)
               ElevatedButton(onPressed: () async{
                 if(await PermissionHandler.arePermissionsGranted()){
                   err("Permissions Granted");
+                  setState((){});
+                }else{
+                  err("Perissions failed to grant");
                   setState((){});
                 }
               }, child: Text("Check Permissions")),
