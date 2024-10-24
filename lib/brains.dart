@@ -61,16 +61,16 @@ class MyAppState extends ChangeNotifier {
     String ress = "";
     for(Glucometer g in glucometers){
       String res = await g.update(this);
-      ress+=res+";";
+      ress+="$res;";
     }
-    print("BLESS: "+ress);
+    print("BLESS: $ress");
     istoothing = false;
     return ress;
   }
   Future<http.Response> tagTimeout(Future<http.Response> r){
     return r.timeout(Duration(seconds: 5));
   }
-  Future<int> addReading(timestamp, value, meal, method, comments) async{
+  Future<int> addReading(DateTime timestamp, value, meal, method, comments) async{
     double value2 = double.parse(value);
     Future<int> addCT(String u, String p, timestamp, value, meal, method, comments) async {
       ishttpying = true;
@@ -104,7 +104,7 @@ ishttpying = false;
     int rp = 500;
     try{
       print("ADDDDDD");
-      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
+      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp.toIso8601String(), value, meal, method, comments);
     } catch(e){print(e);}
     if(rp==200){
       readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
