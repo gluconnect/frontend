@@ -229,8 +229,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isconnecting = false; //adding readings manually?
-  bool needsupdate =
-      true; //fetch readings first TODO(run every 10 seconds or so)
+  bool needsupdate = true; //fetch readings first TODO(run every 10 seconds or so)
   String errormsg = "";
   bool waitfornext = false;
   bool nthres = false;
