@@ -89,7 +89,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   Map<String, BleDevice?>? glucometer;
   _ConnectGlucometerState({this.glucometer});
   void err(String msg){
-    errormsg = msg;
+    errormsg = msg+"  "+PermissionHandler.errorJunk;
     print("BLE: "+msg);
   }
   @override
