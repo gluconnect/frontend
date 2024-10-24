@@ -51,15 +51,21 @@ class Glucometer{
     }
     //TODO get reading
     String fin = "";
-    Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.tocomm);
+    Uint8List us = Uint8List(0);
+    try{us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.tocomm);
+      print("Baby First Bytes: "+us.toString());
+    }catch(e){
+      print(e);
+    }
     int n = decodeNum(us);
     fin+="num readings: "+n.toString()+",";
-    Map m = jsonDecode(String.fromCharCodes(us));
+    //Map m = jsonDecode(String.fromCharCodes(us));
     for(int i = 0; i < n; i++){
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);
       fin+="requesting reading "+i.toString()+",";
+      print("request reading "+i.toString());
       GlucoReading r = GlucoReading(String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange)));
-      fin+="REAADING OBTAINED: "+[r.timestamp, r.value, r.meal, r.measure_method, r.comment].toString()+",";
+      print("REAADING OBTAINED: "+[r.timestamp, r.value, r.meal, r.measure_method, r.comment].toString()+",");
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
         fin+="Sending new info to serv,";
