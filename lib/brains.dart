@@ -71,9 +71,8 @@ class MyAppState extends ChangeNotifier {
   Future<http.Response> tagTimeout(Future<http.Response> r){
     return r.timeout(Duration(seconds: 5));
   }
-  Future<int> addReading(DateTime timestamp, value, meal, method, comments) async{
-    double value2 = double.parse(value);
-    Future<int> addCT(String u, String p, timestamp, value, meal, method, comments) async {
+  Future<int> addReading(DateTime timestamp, double value, meal, method, comments) async{
+    Future<int> addCT(String u, String p, DateTime timestamp, double value, meal, method, comments) async {
       ishttpying = true;
 final response = await tagTimeout(http.post(
         Uri.parse('$URL/add_reading'),
@@ -83,7 +82,7 @@ final response = await tagTimeout(http.post(
         body: jsonEncode(<String, dynamic>{
           'email': u,
           'password': p,
-          'time': timestamp,
+          'time': timestamp.toIso8601String(),
           'value': value,
           'meal': meal,
           'measure_method': method,
@@ -105,10 +104,10 @@ ishttpying = false;
     int rp = 500;
     try{
       print("ADDDDDD");
-      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp.toIso8601String(), value2, meal, method, comments);
+      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
     } catch(e){print(e);}
     if(rp==200){
-      readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
+      readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
       //callback();
     }else{
       //callback("User does not exist");

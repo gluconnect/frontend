@@ -260,7 +260,7 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-  Future<void> addReading(MyAppState s, timec, valc, mealc, methc, commc)async{
+  Future<void> addReading(MyAppState s, DateTime timec, double valc, mealc, methc, commc)async{
     int result = await s.addReading(timec, valc, mealc, methc, commc);
     print("reading appears");
     if(result==200){
@@ -478,7 +478,7 @@ class _HomePageState extends State<HomePage> {
                             // the form is invalid.
                             if (formKey.currentState!.validate()) {
                               //_formKey.currentState.save();
-                              addReading(appState, timec.text, valc.text, mealc.text, methc.text, commc.text);
+                              // addReading(appState, timec.text, valc.text, mealc.text, methc.text, commc.text);
                               //TODO
                               setState((){isconnecting = false;needsupdate = true;});
                             }
