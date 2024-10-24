@@ -153,11 +153,13 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
               ElevatedButton(onPressed: () async{
                 bool v = await UniversalBle.enableBluetooth();
                 err("Enabled? $v");
+                setState((){});
               }, child: Text("Enable Bluetooth")),
             if(BleCapabilities.requiresRuntimePermission)
               ElevatedButton(onPressed: () async{
                 if(await PermissionHandler.arePermissionsGranted()){
                   err("Permissions Granted");
+                  setState((){});
                 }
               }, child: Text("Check Permissions")),
             if(BleCapabilities.supportsConnectedDevicesApi)
@@ -165,6 +167,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                 List<BleDevice> devs = await UniversalBle.getSystemDevices();
                 if(devs.isEmpty){
                   err("No Connected Devices Found");
+                  setState((){});
                 }
                 setState(() {
                   bleDevices.clear();
@@ -194,6 +197,21 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
     );
   }
 }
+/*class Didget extends StatefulWidget{
+  Function callback;
+  Didget({super.key, required this.callback});
+  @override
+  State<Didget> createState() => _DidgetState(callback: callback);
+}
+class _DidgetState extends State<Didget>{
+  Function callback;
+  _DidgetState({required this.callback});
+  @override
+  Widget build(BuildContext context){
+    call
+    return Text(callback.msg);
+  }
+}*/
 class Midget extends StatefulWidget{
   Function callback;
   Midget({super.key, required this.callback});
