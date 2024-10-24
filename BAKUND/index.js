@@ -22,16 +22,16 @@ var Users = [{
         password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1',
         readings: [
             {
-                timestamp: new Date('December 17, 1995 03:24:00'),
-                value: '120.4',
+                time: new Date('December 17, 1995 03:24:00'),
+                value: 120.4,
                 meal: 'After Meal',
                 comment: '',
                 measure_method: 'blood sample',
                 extra_data: new Map()
             },
             {
-                timestamp: new Date('December 21, 1997 02:14:03'),
-                value: '110.2',
+                time: new Date('December 21, 1997 02:14:03'),
+                value: 110.2,
                 meal: 'Before Meal',
                 comment: '',
                 measure_method: 'blood sample',
@@ -46,7 +46,7 @@ var Users = [{
     }];
 function toReading(x) {
     var glooc = {
-        timestamp: new Date(),
+        time: new Date(),
         value: x.value,
         meal: x.meal,
         comment: x.comment,
@@ -54,30 +54,30 @@ function toReading(x) {
         extra_data: new Map
     };
     //decode timestamp
-    var _a = x.timestamp.split(' '), datePart = _a[0], timePart = _a[1];
+    var _a = x.time.split(' '), datePart = _a[0], timePart = _a[1];
     var _b = datePart.split('-'), year = _b[0], month = _b[1], day = _b[2];
     var _c = timePart.split(':'), hours = _c[0], minutes = _c[1], seconds = _c[2];
-    glooc.timestamp = new Date(year, month - 1, day, hours, minutes, seconds);
+    glooc.time = new Date(year, month - 1, day, hours, minutes, seconds);
     //
     return glooc;
 }
 function serializeReading(x) {
     var glooc = {
-        timestamp: "",
+        time: "",
         value: x.value,
         meal: x.meal,
         comment: x.comment,
         measure_method: x.measure_method,
         extra_data: ""
     };
-    var date = x.timestamp;
+    var date = x.time;
     var year = date.getFullYear();
     var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
     var day = String(date.getDate()).padStart(2, '0');
     var hours = String(date.getHours()).padStart(2, '0');
     var minutes = String(date.getMinutes()).padStart(2, '0');
     var seconds = String(date.getSeconds()).padStart(2, '0');
-    glooc.timestamp = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+    glooc.time = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
     return glooc;
 }
 //NumerIt code
@@ -159,7 +159,23 @@ app.post('/add_reading', checkLogin, function (req, res) {
         var user = getUser(req);
         if (!user.readings)
             user.readings = [];
-        user.readings.push(toReading(req.body));
+        var reading = void 0;
+        try {
+            reading = toReading(req.body);
+        }
+        catch (e) {
+            return;
+        }
+        user.readings.push(reading);
+        if (user.threshold && req.body.value > user.threshold && user.viewers) {
+            for (var _i = 0, _a = user.viewers; _i < _a.length; _i++) {
+                var v = _a[_i];
+                var u = getUser({ body: { email: v.email } });
+                if (!u.warnings)
+                    u.warnings = [];
+                u.warnings.push({ email: user === null || user === void 0 ? void 0 : user.id, reading: reading });
+            }
+        }
         console.log(user.readings);
         res.sendStatus(200);
     }
@@ -179,15 +195,11 @@ app.post('/clear_readings', checkLogin, function (req, res) {
 });
 app.post('/spectate_readings', checkLogin, function (req, res) {
     var user = getUser(req);
-    console.log(user.patients);
-    if (!user.patients.some(function (v) { return v.email == req.body.uemail; })) { //make sure user authorizes patient.
-        console.log("Spectate unauthorized");
+    if (!user.patients.some(function (v) { return v.email == req.uemail; })) { //make sure user authorizes patient.
         res.sendStatus(401);
         return;
     }
-    var u = getUser({ body: { email: req.body.uemail } });
-    console.log("Spectating "+u);
-    if(!u.readings)u.readings = [];
+    var u = getUser({ body: { email: req.uemail } });
     res.status(200).json(u.readings.map(function (i) { return serializeReading(i); }));
 });
 app.post('/get_viewers', checkLogin, function (req, res) {
@@ -229,38 +241,16 @@ app.post('/get_threshold', checkLogin, function (req, res) {
         user.threshold = -1;
     res.status(200).send(user.threshold + "");
 });
-app.post('/get_patient_name', checkLogin, function (req, res) {
-    var user = getUser(req);
-    if (!user.patients.some(function (v) { return v.email == req.body.uemail; })) { //make sure user authorizes patient.
-        console.log("pg unauth");
-        res.sendStatus(401);
-        return;
-    }
-    var u = getUser({ body: { email: req.body.uemail } });
-    console.log(u.name);
-    res.status(200).send(u.name);
-});
-app.post('/get_user_name', checkLogin, function (req, res) {
-    var user = getUser(req);
-    if (!user.viewers.some(function (v) { return v.email == req.body.uemail; })) { //make sure user authorizes patient.
-        res.sendStatus(401);
-        return;
-    }
-    var u = getUser({ body: { email: req.body.uemail } });
-    console.log(u);
-    res.status(200).send(u.name);
-});
 app.post('/spectate_threshold', checkLogin, function (req, res) {
     var user = getUser(req);
-    if (!user.patients.some(function (v) { return v.email == req.body.uemail; })) { //make sure user authorizes patient.
+    if (!user.patients.some(function (v) { return v.email == req.uemail; })) { //make sure user authorizes patient.
         res.sendStatus(401);
         return;
     }
-    var u = getUser({ body: { email: req.body.uemail } });
-    console.log(u);
+    var u = getUser({ body: { email: req.uemail } });
     if (!u.threshold)
         u.threshold = -1;
-    res.status(200).send(""+u.threshold);
+    res.status(200).send(u.threshold);
 });
 app.post('/change_name', checkLogin, function (req, res) {
     var user = getUser(req);
@@ -362,9 +352,6 @@ app.post('/disconnect_patient', checkLogin, function (req, res) {
         res.sendStatus(200);
     }
 });
-app.get('/', function(req, res){
-  res.send("Hello");
-})
 /*app.use('/welcome', (err, req, res, next)=>{
   console.log(err)
   res.redirect('/login')

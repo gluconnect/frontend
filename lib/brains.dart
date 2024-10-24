@@ -83,7 +83,7 @@ final response = await tagTimeout(http.post(
         body: jsonEncode(<String, String>{
           'email': u,
           'password': p,
-          'timestamp': timestamp,
+          'time': timestamp,
           'value': value,
           'meal': meal,
           'measure_method': method,
@@ -108,7 +108,7 @@ ishttpying = false;
       rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
     } catch(e){print(e);}
     if(rp==200){
-      readings.add(GlucoReading(jsonDecode("{'timestamp': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
+      readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value2,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
       //callback();
     }else{
       //callback("User does not exist");
@@ -346,7 +346,7 @@ ishttpying = false;
     if(rp!=null&&rp!.statusCode==200){
       List<dynamic> res = jsonDecode(rp.body);
       print(res);
-      try{readings = res.map((v)=>GlucoReading(v)).toList();}catch(e){return null;}
+      try{readings = res.map((v)=>GlucoReading(v)).toList();}catch(e){print(e); return null;}
       print(readings);
       return readings;
     }else{
