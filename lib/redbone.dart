@@ -39,29 +39,34 @@ class Glucometer{
     //
     return true;
   }
-  Future<bool> update(MyAppState s) async{
+  Future<String> update(MyAppState s) async{
     if(meter==null){
-      return true;
+      return "no meter connected for "+name;
     }
     BleConnectionState isconnected = await meter!.connectionState;
     if(isconnected!=BleConnectionState.connected){
       bool worked = await connect();
       //TODO call error if failed
-      return false;
+      if(!worked)return "device not connectable";
     }
     //TODO get reading
+    String fin = "";
     Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.tocomm);
     int n = decodeNum(us);
+    fin+="num readings: "+n.toString()+",";
     Map m = jsonDecode(String.fromCharCodes(us));
     for(int i = 0; i < n; i++){
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);
+      fin+="requesting reading "+i.toString()+",";
       GlucoReading r = GlucoReading(String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange)));
+      fin+="REAADING OBTAINED: "+[r.timestamp, r.value, r.meal, r.measure_method, r.comment].toString()+",";
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
+        fin+="Sending new info to serv,";
         s.scheduleUpdate();
       }
     }
-    return true;
+    return fin;
   }
   Uint8List encodeNum(int i){
     ByteData d = ByteData(8);
@@ -218,14 +223,16 @@ class _DidgetState extends State<Didget>{
 }*/
 class Midget extends StatefulWidget{
   Function callback;
-  Midget({super.key, required this.callback});
+  String message;
+  Midget({super.key, required this.message, required this.callback});
   @override
-  State<Midget> createState() => _MidgetState(callback: callback);
+  State<Midget> createState() => _MidgetState(message: message, callback: callback);
 }
 
 class _MidgetState extends State<Midget> {
   Function callback;
-  _MidgetState({required this.callback});
+  String message;
+  _MidgetState({required this.message, required this.callback});
   Future<void> update() async{
     await Future.delayed(Duration(seconds: 15));
     callback();
@@ -238,7 +245,9 @@ class _MidgetState extends State<Midget> {
     };
     callback();
     update();
-    return SizedBox.shrink();
+    return ElevatedButton(onPressed: (){
+      callback();
+    }, child: Text(message));
   }
 }
 class PermissionHandler {

@@ -53,14 +53,17 @@ class MyAppState extends ChangeNotifier {
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
   }
-  Future<void> updateGlucometers(Function callback) async{
+  Future<String> updateGlucometers(Function callback) async{
     updatepage = false;
+    String ress = "";
     for(Glucometer g in glucometers){
-      bool res = await g.update(this);
+      String res = await g.update(this);
+      ress+=res+";";
     }
     if(updatepage){
-      callback();
+      callback(ress);
     }
+    return ress;
   }
   void scheduleUpdate(){
     updatepage = true;

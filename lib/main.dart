@@ -36,6 +36,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var selectedIndex = 0;
+  String m = "Aloha";
   void logOut(){
     setState((){selectedIndex = 0;});
   }
@@ -105,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   type: BottomNavigationBarType.fixed,
                 ),
               ),
-              Midget(callback: (){print("MIDGET!!");appState.updateGlucometers((){ss((){});});})
+              Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers((s){m = s;ss((){});});})
             ],
           ),
         );
