@@ -24,7 +24,7 @@ class GlucoReading{
   String  measure_method = "blood sample";
   Map<String, dynamic>? extra_data;
   GlucoReading(dynamic thing){
-    timestamp = DateTime.parse(thing['timestamp'].replaceFirst(' ', 'T'));
+    timestamp = DateTime.parse(thing['timestamp']);
     value = double.parse(thing['value']);
     meal = thing['meal'];
     if(true){
