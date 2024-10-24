@@ -44,7 +44,7 @@ class Glucometer{
       return "no meter connected for "+name;
     }
     BleConnectionState isconnected = await meter!.connectionState;
-    if(isconnected!=BleConnectionState.connected){
+    if(isconnected!=BleConnectionState.connected||reads==null||meter==null){
       bool worked = await connect();
       //TODO call error if failed
       if(!worked)return "device not connectable";
@@ -244,7 +244,7 @@ class _MidgetState extends State<Midget> {
       //TODO: tell user device disconnected
     };
     callback();
-    update();
+    //update();
     return ElevatedButton(onPressed: (){
       callback();
     }, child: Text(message));

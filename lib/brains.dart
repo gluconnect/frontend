@@ -63,6 +63,7 @@ class MyAppState extends ChangeNotifier {
     if(updatepage){
       callback(ress);
     }
+    print("BLESS: "+ress);
     return ress;
   }
   void scheduleUpdate(){
