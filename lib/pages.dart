@@ -208,9 +208,10 @@ bool isNumeric(String s) {
 }
 class HomePage extends StatefulWidget{
   String oemail;
+  Map<String, Function?>? ccb;
   HomePage({super.key, this.oemail = ""});
   @override
-  State<HomePage> createState() => _HomePageState(oemail: oemail);
+  State<HomePage> createState() => _HomePageState(oemail: oemail, ccb: ccb);
 }
 
 class _HomePageState extends State<HomePage> {
@@ -223,7 +224,8 @@ class _HomePageState extends State<HomePage> {
   double currthres = 0;
   String currname = "";
   String oemail;
-  _HomePageState({this.oemail = ""});
+  Map<String, Function?>? ccb;
+  _HomePageState({this.oemail = "", this.ccb});
   Future<void> fetchLists(MyAppState s)async{
     //var clist = await s.getCaretakers();
     if(waitfornext)
@@ -264,9 +266,7 @@ class _HomePageState extends State<HomePage> {
     int result = await s.addReading(timec, valc, mealc, methc, commc);
     print("reading appears");
     if(result==200){
-      setState((){
-        needsupdate = false;
-      });
+      //
     }else{
       setState((){
         errormsg = "NO";
@@ -291,6 +291,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context){
     var appState = context.watch<MyAppState>();
+    appState.addListener((){setState((){needsupdate = true;});});
     String oname = currname;
     String title = oemail==""?"Welcome, $oname!":"Viewing "+oname+"'s readings";
     //appState.addGlucometers();

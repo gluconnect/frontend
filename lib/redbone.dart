@@ -19,7 +19,7 @@ class Glucometer{
   Glucometer({this.id = 0, this.name = "Glucometer", this.meter});
   String name = "HELLOWORLD";
   int id;
-  int lastsuccessfulindex = 0;
+  int lastsuccessfulindex = 450;
   BleDevice? meter;
   BleService? reads;
   Future<bool> connect() async{
@@ -59,7 +59,7 @@ class Glucometer{
       print(e);
     }
     int n = decodeNum(us);
-    fin+="num readings: "+n.toString()+",";
+    print("num readings: "+n.toString()+",");
     //Map m = jsonDecode(String.fromCharCodes(us));
     for(int i = lastsuccessfulindex; i < n; i++){
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);

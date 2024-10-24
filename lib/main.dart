@@ -120,11 +120,12 @@ class MyFatHomePage extends StatefulWidget{
 
 class _MyFatHomePageState extends State<MyFatHomePage> {
   String m = "Adios";
-
+  Map<String, Function?> s = Map();
   @override
   Widget build(BuildContext ctx){
+    s = {'cb': null};
     MyAppState appState = ctx.watch<MyAppState>();
     return Column(children: [Expanded(child: MyHomePage()),
-    Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers();})]);
+    Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers(s["cb"]);})]);
   }
 }

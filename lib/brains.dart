@@ -50,22 +50,29 @@ class MyAppState extends ChangeNotifier {
   var servdowncode = 501;
   var ishttpying = false;
   bool istoothing = false;
+  bool nup = false;
   void addGlucometer({String name = "", BleDevice? dev}){
     glucometers.add(Glucometer(id: Glucometer.count, name: name, meter: dev));
     Glucometer.count++;
+    //nup = true;
   }
-  Future<String> updateGlucometers() async{
+  Future<String> updateGlucometers(Function? callback) async{
     if(istoothing){
       return "PRevious reading not done!!!!!!";
     }
+    nup = false;
     istoothing = true;
     String ress = "";
     for(Glucometer g in glucometers){
       String res = await g.update(this);
       ress+="$res;";
     }
+    if(nup){
+      if(callback!=null)callback();
+    }
     print("BLESS: $ress");
     istoothing = false;
+    nup = false;
     return ress;
   }
   Future<http.Response> tagTimeout(Future<http.Response> r){
@@ -110,8 +117,10 @@ ishttpying = false;
       print('{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
       dynamic ss = jsonDecode('{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
       print("suxes "+ss.toString());
+      nup = true;
       readings.add(GlucoReading(ss));
       print(readings);
+      notifyListeners();
     }else{
       //callback("User does not exist");
     }
