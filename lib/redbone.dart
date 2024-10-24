@@ -68,7 +68,7 @@ class Glucometer{
       String st = String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange));
       print ("raw reading "+st);
       GlucoReading r = GlucoReading(jsonDecode(st));
-      print("REAADING OBTAINED: "+[r.timestamp, r.value, r.meal, r.measure_method, r.comment].toString()+",");
+      print("REAADING OBTAINED: "+[r.timestamp.toIso8601String(), r.value.toString(), r.meal, r.measure_method, r.comment].toString()+",");
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value.toString(), r.meal, r.measure_method, r.comment);
         fin+="Sending new info to serv,";
