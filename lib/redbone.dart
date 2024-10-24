@@ -51,10 +51,10 @@ class Glucometer{
     }
     //TODO get reading
     Uint8List us = await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.tocomm);
-    int n = Uint64List.fromList(us)[0];
+    int n = decodeNum(us);
     Map m = jsonDecode(String.fromCharCodes(us));
     for(int i = 0; i < n; i++){
-      await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, Uint8List.fromList(Uint64List.fromList([i])), BleOutputProperty.withResponse);
+      await UniversalBle.writeValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);
       GlucoReading r = GlucoReading(String.fromCharCodes(await UniversalBle.readValue(meter!.deviceId, reads!.uuid, BigPharma.indexchange)));
       if(!s.readings.any((GlucoReading e)=>e.timestamp==r.timestamp)){
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
@@ -62,6 +62,15 @@ class Glucometer{
       }
     }
     return true;
+  }
+  Uint8List encodeNum(int i){
+    ByteData d = ByteData(8);
+    d.setUint64(0 ,i, Endian.little);
+    return d.buffer.asUint8List();
+  }
+  int decodeNum(Uint8List i){
+    ByteData b = ByteData.sublistView(i);
+    return b.getUint64(0, Endian.little);
   }
 }
 class ConnectGlucometer extends StatefulWidget{
