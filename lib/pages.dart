@@ -478,7 +478,7 @@ class _HomePageState extends State<HomePage> {
                             // the form is invalid.
                             if (formKey.currentState!.validate()) {
                               //_formKey.currentState.save();
-                              // addReading(appState, timec.text, valc.text, mealc.text, methc.text, commc.text);
+                              addReading(appState, DateTime.parse(timec.text), double.parse(valc.text), mealc.text, methc.text, commc.text);
                               //TODO
                               setState((){isconnecting = false;needsupdate = true;});
                             }

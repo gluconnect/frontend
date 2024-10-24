@@ -107,8 +107,11 @@ ishttpying = false;
       rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value, meal, method, comments);
     } catch(e){print(e);}
     if(rp==200){
-      readings.add(GlucoReading(jsonDecode("{'time': $timestamp,'value': $value,'meal': $meal,'comment': $comments,'measure_method': $method,extra_data: {}}")));
-      //callback();
+      print('{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
+      dynamic ss = jsonDecode('{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
+      print("suxes "+ss.toString());
+      readings.add(GlucoReading(ss));
+      print(readings);
     }else{
       //callback("User does not exist");
     }

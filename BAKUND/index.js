@@ -54,7 +54,7 @@ function toReading(x) {
         extra_data: new Map
     };
     //decode timestamp
-    var _a = x.time.split(' '), datePart = _a[0], timePart = _a[1];
+    var _a = x.time.split('T'), datePart = _a[0], timePart = _a[1];
     var _b = datePart.split('-'), year = _b[0], month = _b[1], day = _b[2];
     var _c = timePart.split(':'), hours = _c[0], minutes = _c[1], seconds = _c[2];
     glooc.time = new Date(year, month - 1, day, hours, minutes, seconds);
@@ -77,7 +77,7 @@ function serializeReading(x) {
     var hours = String(date.getHours()).padStart(2, '0');
     var minutes = String(date.getMinutes()).padStart(2, '0');
     var seconds = String(date.getSeconds()).padStart(2, '0');
-    glooc.time = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+    glooc.time = "".concat(year, "-").concat(month, "-").concat(day, "T").concat(hours, ":").concat(minutes, ":").concat(seconds);
     return glooc;
 }
 //NumerIt code
@@ -106,11 +106,11 @@ function verify(email, password) {
         return null;
     }
     else {
-        console.log("BENCH");
+        //console.log("BENCH");
         var res_1 = null;
         Users.filter(function (user) {
             if (user.id === email && user.password === hash(password)) {
-                console.log("crit");
+                //console.log("crit");
                 res_1 = user;
             }
         });
@@ -160,14 +160,19 @@ app.post('/add_reading', checkLogin, function (req, res) {
         if (!user.readings)
             user.readings = [];
         var reading = void 0;
+        console.log("Add reading: ");
+        console.log(req.body);
         try {
             reading = toReading(req.body);
         }
         catch (e) {
+            res.sendStatus(300);
             return;
         }
         user.readings.push(reading);
-        if (user.threshold && req.body.value > user.threshold && user.viewers) {
+        console.log("New readings ");
+        console.log(user.readings);
+        /*if (user.threshold && req.body.value > user.threshold && user.viewers) {
             for (var _i = 0, _a = user.viewers; _i < _a.length; _i++) {
                 var v = _a[_i];
                 var u = getUser({ body: { email: v.email } });
@@ -175,8 +180,7 @@ app.post('/add_reading', checkLogin, function (req, res) {
                     u.warnings = [];
                 u.warnings.push({ email: user === null || user === void 0 ? void 0 : user.id, reading: reading });
             }
-        }
-        console.log(user.readings);
+        }*/
         res.sendStatus(200);
     }
 });
