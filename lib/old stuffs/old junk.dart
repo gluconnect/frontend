@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         ),
-        home: MyHomePage(),
+        home: const MyHomePage(),
       ),
     );
   }
@@ -207,7 +207,7 @@ class MyAppState extends ChangeNotifier {
   }
   Future<List?> getPatients() async{
     Future<http.Response> getPT(String u, String p) async {
-      print(u+" "+p);
+      print("$u $p");
       final http.Response response = await http.post(
         Uri.parse('$URL/get_patients'),
         headers: <String, String>{
@@ -309,7 +309,7 @@ class MyAppState extends ChangeNotifier {
   }
   Future<String?> changeName(String nname) async{
     Future<http.Response> change(String u, String p, String nname) async {
-      print(u+" "+p);
+      print("$u $p");
       final http.Response response = await http.post(
         Uri.parse('$URL/change_name'),
         headers: <String, String>{
@@ -343,7 +343,7 @@ class MyAppState extends ChangeNotifier {
   }
   Future<String?> changePass(String npass) async{
     Future<http.Response> change(String u, String p, String npass) async {
-      print(u+" "+p);
+      print("$u $p");
       final http.Response response = await http.post(
         Uri.parse('$URL/change_password'),
         headers: <String, String>{
@@ -446,7 +446,7 @@ class MyAppState extends ChangeNotifier {
   }
   Future<int> deleteAccount() async{
     Future<http.Response> change(String u, String p) async {
-      print(u+" "+p);
+      print("$u $p");
       final http.Response response = await http.post(
         Uri.parse('$URL/delete'),
         headers: <String, String>{
@@ -503,13 +503,13 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         break;
       case 1:
-        page = ConnectPage();//connect, remove, and manage glucose monitors
+        page = const ConnectPage();//connect, remove, and manage glucose monitors
         break;
       case 2:
         page = Settings(callback: logOut);//accoutn settings and stuff
         break;
       case 3:
-        page = SelectPatientsPage();//select and manage patients
+        page = const SelectPatientsPage();//select and manage patients
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -825,6 +825,8 @@ class _LogInPageState extends State<LogInPage> {
 }
 
 class HomePage extends StatefulWidget{
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -862,11 +864,11 @@ class _HomePageState extends State<HomePage> {
             children: [
               Row(
                 children: [
-                  Spacer(),
-                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                  const Spacer(),
+                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: const Icon(Icons.cancel)),
                 ],
               ),
-              Text('Connect Glucose Monitor', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              const Text('Connect Glucose Monitor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
               Container(
                 constraints: const BoxConstraints(maxWidth:400),
                 child: Expanded(child: Form(
@@ -923,7 +925,7 @@ class _HomePageState extends State<HomePage> {
       //return ElevatedButton(child: Text("Connect Glucometer"), onPressed: (){});
     }else if (needsupdate){
       fetchLists(appState);
-      return Column(
+      return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text("Loading..."),
@@ -935,10 +937,10 @@ class _HomePageState extends State<HomePage> {
       return Center(
         child: Column(
           children: [
-            Text("Home", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+            const Text("Home", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             const Text('No readings available yet'),
             if(appState.glucometers.isEmpty)
-              Text("You have no connected glucose monitors...Go to the connect tab to connect one"),
+              const Text("You have no connected glucose monitors...Go to the connect tab to connect one"),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(onPressed: (){
@@ -951,7 +953,7 @@ class _HomePageState extends State<HomePage> {
     }
     return ListView(
       children: <Widget>[
-        Text("Connect Glucose Monitors", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+        const Text("Connect Glucose Monitors", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You have '
@@ -963,8 +965,8 @@ class _HomePageState extends State<HomePage> {
             title: Row(
               children: [
                 Text(glucometer.name),
-                Spacer(),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                const Spacer(),
+                ElevatedButton(child: const Icon(Icons.settings), onPressed: (){
                   appState.deleteGlucometer(glucometer.id);
                   setState((){});
                 })
@@ -998,21 +1000,29 @@ class _SettingsState extends State<Settings> {
   String errormsg = "";
   //request to change the name of the user to string t, if not, show error msg
   Future<void> changeName(MyAppState mas, String t) async{
-    print("changing name "+t);
+    print("changing name $t");
     String? n = await mas.changeName(t);
-    if(n!=null)setState((){microsettings = 0;errormsg = "Name change successful";});
-    else setState((){errormsg = "Something went wrong";});
+    if(n!=null) {
+      setState((){microsettings = 0;errormsg = "Name change successful";});
+    } else {
+      setState((){errormsg = "Something went wrong";});
+    }
   }
   Future<void> changePass(MyAppState mas, String t) async{
-    print("changing pass "+t);
+    print("changing pass $t");
     String? n = await mas.changePass(t);
-    if(n!=null)setState((){microsettings = 0;errormsg = "Password change successful";});
-    else setState((){errormsg = "Something went wrong";});
+    if(n!=null) {
+      setState((){microsettings = 0;errormsg = "Password change successful";});
+    } else {
+      setState((){errormsg = "Something went wrong";});
+    }
   }
   Future<void> deleteAccount(MyAppState mas) async{
     int n = await mas.deleteAccount();
     if(n==200)if(callback!=null){callback!();}
-    else setState((){microsettings = 0;});
+    else {
+      setState((){microsettings = 0;});
+    }
   }
   @override
   Widget build(BuildContext context){
@@ -1021,14 +1031,14 @@ class _SettingsState extends State<Settings> {
       return SizedBox.expand(
         child: Column(
           children: [
-            Text("Settings", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+            const Text("Settings", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             if(errormsg!="")
               Text(errormsg),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  Text("Current Name: ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+                  const Text("Current Name: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
                   Text(appState.lastinfo["name"]!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
                   ElevatedButton(onPressed: (){setState((){microsettings = 2;});}, child: const Text("Change Name")),
                 ],
@@ -1042,7 +1052,7 @@ class _SettingsState extends State<Settings> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(onPressed: (){appState.logOut();if(callback!=null){callback!();}}, child: const Text("Log Out")),
             ),
-            Spacer(),
+            const Spacer(),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(onPressed: (){setState((){microsettings = 1;});}, child: const Text("Delete Account")),
@@ -1056,11 +1066,11 @@ class _SettingsState extends State<Settings> {
           children: [
             Row(
               children: [
-                Spacer(),
-                ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: Icon(Icons.cancel)),
+                const Spacer(),
+                ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: const Icon(Icons.cancel)),
               ],
             ),
-            Text("Delete Account?", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+            const Text("Delete Account?", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             ElevatedButton(onPressed: (){deleteAccount(appState);}, child: const Text("DELETE ACCOUNT")),
           ],
         ),
@@ -1074,11 +1084,11 @@ class _SettingsState extends State<Settings> {
             children: [
               Row(
                 children: [
-                  Spacer(),
-                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: Icon(Icons.cancel)),
+                  const Spacer(),
+                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: const Icon(Icons.cancel)),
                 ],
               ),
-              Text('Change Account Name', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              const Text('Change Account Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
               Container(
                 constraints: const BoxConstraints(maxWidth:400),
                 child: Expanded(child: Form(
@@ -1139,11 +1149,11 @@ class _SettingsState extends State<Settings> {
             children: [
               Row(
                 children: [
-                  Spacer(),
-                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: Icon(Icons.cancel)),
+                  const Spacer(),
+                  ElevatedButton(onPressed: (){setState((){microsettings = 0;});}, child: const Icon(Icons.cancel)),
                 ],
               ),
-              Text('Change Account Password', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              const Text('Change Account Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
               Container(
                 constraints: const BoxConstraints(maxWidth:400),
                 child: Expanded(child: Form(
@@ -1197,7 +1207,7 @@ class _SettingsState extends State<Settings> {
         //),
       );
     }else{
-      return Placeholder();
+      return const Placeholder();
     }
   }
 }
@@ -1228,11 +1238,11 @@ class _ConnectPageState extends State<ConnectPage> {
             children: [
               Row(
                 children: [
-                  Spacer(),
-                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                  const Spacer(),
+                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: const Icon(Icons.cancel)),
                 ],
               ),
-              Text('Connect Glucose Monitor', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+              const Text('Connect Glucose Monitor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
               Container(
                 constraints: const BoxConstraints(maxWidth:400),
                 child: Expanded(child: Form(
@@ -1300,7 +1310,7 @@ class _ConnectPageState extends State<ConnectPage> {
       return Center(
         child: Column(
           children: [
-            Text("Connect Glucose Monitors", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+            const Text("Connect Glucose Monitors", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
             const Text('No connected glucose monitors yet'),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -1314,7 +1324,7 @@ class _ConnectPageState extends State<ConnectPage> {
     }
     return ListView(
       children: <Widget>[
-        Text("Connect Glucose Monitors", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+        const Text("Connect Glucose Monitors", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You have '
@@ -1326,8 +1336,8 @@ class _ConnectPageState extends State<ConnectPage> {
             title: Row(
               children: [
                 Text(glucometer.name),
-                Spacer(),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                const Spacer(),
+                ElevatedButton(child: const Icon(Icons.settings), onPressed: (){
                   appState.deleteGlucometer(glucometer.id);
                   setState((){});
                 })
@@ -1392,8 +1402,8 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
             children: [
               Row(
                 children: [
-                  Spacer(),
-                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: Icon(Icons.cancel)),
+                  const Spacer(),
+                  ElevatedButton(onPressed: (){setState((){isconnecting = false;});}, child: const Icon(Icons.cancel)),
                 ],
               ),
               Container(
@@ -1404,7 +1414,7 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Authorize User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+                      const Text('Authorize User', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
                       if(errormsg!="")
                         Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -1507,7 +1517,7 @@ class _PatientListState extends State<PatientList> {
     var list = appState.patients;
     if(needsupdate){
       fetchLists(appState);
-      return Column(
+      return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text("Loading..."),
@@ -1516,17 +1526,17 @@ class _PatientListState extends State<PatientList> {
     }else if(errormsg!=""){
       return Text(errormsg);
     }else if (list.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           children: [
-            const Text('No connected patients yet'),
+            Text('No connected patients yet'),
           ],
         ),
       );
     }
     return ListView(
       children: <Widget>[
-        Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Patients", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+        Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Text("Patients", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You can view '
@@ -1538,12 +1548,12 @@ class _PatientListState extends State<PatientList> {
             title: Row(
               children: [
                 Text(glucometer.name),
-                Spacer(),
-                ElevatedButton(child: Icon(Icons.search), onPressed: (){
+                const Spacer(),
+                ElevatedButton(child: const Icon(Icons.search), onPressed: (){
                   //TODO: VIEW PATIENT
                   setState((){});
                 }),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                ElevatedButton(child: const Icon(Icons.settings), onPressed: (){
                   appState.deletePatient(glucometer.id, ({String msg = ""}){setState((){errormsg = msg;});});
                   setState((){});
                 })
@@ -1591,7 +1601,7 @@ class _CaretakerListState extends State<CaretakerList> {
     var list = appState.caretakers;
     if(needsupdate){
       fetchLists(appState);
-      return Column(
+      return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text("Loading..."),
@@ -1616,7 +1626,7 @@ class _CaretakerListState extends State<CaretakerList> {
     }
     return ListView(
       children: <Widget>[
-        Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Authorized Users", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
+        Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Text("Authorized Users", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 50),),
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You have '
@@ -1628,8 +1638,8 @@ class _CaretakerListState extends State<CaretakerList> {
             title: Row(
               children: [
                 Text(glucometer.name),
-                Spacer(),
-                ElevatedButton(child: Icon(Icons.settings), onPressed: (){
+                const Spacer(),
+                ElevatedButton(child: const Icon(Icons.settings), onPressed: (){
                   appState.deleteCaretaker(glucometer.id, ({String msg = ""}){setState((){errormsg = msg;});});
                   setState((){});
                 })
@@ -1665,7 +1675,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   _ConnectGlucometerState({this.glucometer});
   void err(String msg){
     errormsg = msg;
-    print("BLE: "+msg);
+    print("BLE: $msg");
   }
   @override
   void initState(){
@@ -1698,7 +1708,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
         Text(errormsg),
         Row(
           children: [
-            ElevatedButton(child: isscanning?Text("Stop Search"):Text("Search for Glucometers"), onPressed: () async{
+            ElevatedButton(child: isscanning?const Text("Stop Search"):const Text("Search for Glucometers"), onPressed: () async{
               if(!isscanning){
                 setState(() {
                   bleDevices.clear();
@@ -1727,13 +1737,13 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
               ElevatedButton(onPressed: () async{
                 bool v = await UniversalBle.enableBluetooth();
                 err("Enabled? $v");
-              }, child: Text("Enable Bluetooth")),
+              }, child: const Text("Enable Bluetooth")),
             if(BleCapabilities.requiresRuntimePermission)
               ElevatedButton(onPressed: () async{
                 if(await PermissionHandler.arePermissionsGranted()){
                   err("Permissions Granted");
                 }
-              }, child: Text("Check Permissions")),
+              }, child: const Text("Check Permissions")),
             if(BleCapabilities.supportsConnectedDevicesApi)
               ElevatedButton(onPressed: () async{
                 List<BleDevice> devs = await UniversalBle.getSystemDevices();
@@ -1744,31 +1754,33 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                   bleDevices.clear();
                   bleDevices.addAll(devs);
                 });
-              }, child: Text("List Connected Devices")),
+              }, child: const Text("List Connected Devices")),
             if(bleDevices.isNotEmpty)
               ElevatedButton(onPressed: (){
                 setState(() {
                   bleDevices.clear();
                 });
-              }, child: Text("Clear List"))
+              }, child: const Text("Clear List"))
           ]
         ),
         Text("BLE Availability: ${avSt?.name}"),
         Divider(color: Colors.green.shade900),
         Container(child: isscanning&&bleDevices.isEmpty
-          ? Center(child: CircularProgressIndicator.adaptive())
+          ? const Center(child: CircularProgressIndicator.adaptive())
           : !isscanning&&bleDevices.isEmpty
-            ? Placeholder()
+            ? const Placeholder()
             : ListView.separated(itemBuilder: (context, index){
                 BleDevice dev = bleDevices[bleDevices.length-index-1];
                 return Text(dev.deviceId);
-              }, separatorBuilder: (context, index)=>Divider(), itemCount: bleDevices.length)
+              }, separatorBuilder: (context, index)=>const Divider(), itemCount: bleDevices.length)
         )
       ],
     );
   }
 }
 class Midget extends StatefulWidget{
+  const Midget({super.key});
+
   @override
   State<Midget> createState() => _MidgetState();
 }
@@ -1779,7 +1791,7 @@ class _MidgetState extends State<Midget> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(Duration(seconds: 15), (timer){callback!();});
+    timer = Timer.periodic(const Duration(seconds: 15), (timer){callback!();});
   }
 
   @override
@@ -1789,7 +1801,7 @@ class _MidgetState extends State<Midget> {
   }
   @override
   Widget build(BuildContext context){
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }
 class PermissionHandler {
@@ -1868,14 +1880,14 @@ Future<void> connectGlucometer() async{
   //connect to glucometer when available, and obtain service to get readings
   UniversalBle.onScanResult = (BleDevice bleDevice) async {
     var deviceId = bleDevice.deviceId;
-    print("Device found "+deviceId);
+    print("Device found $deviceId");
     await UniversalBle.connect(deviceId);
     print("Device connected");
     List<BleService> b = await UniversalBle.discoverServices(deviceId);
     print("Services obtained");
     BleService s = b.firstWhere((t)=>t.uuid=='0x1808');
-    print("Service id "+s.uuid);
-    Uint8List us = await UniversalBle.readValue(deviceId, s.uuid, '0000-00001-'+deviceId);
+    print("Service id ${s.uuid}");
+    Uint8List us = await UniversalBle.readValue(deviceId, s.uuid, '0000-00001-$deviceId');
     decode(us);
   };
   AvailabilityState state = await UniversalBle.getBluetoothAvailabilityState();

@@ -32,23 +32,23 @@ class Glucometer {
       return false;
     }
     var deviceId = meter!.deviceId;
-    print("Device found " + deviceId);
+    print("Device found $deviceId");
     await UniversalBle.connect(deviceId);
     print("Device connected");
-    List<BleService> b = await UniversalBle.discoverServices(deviceId);
+    List<BleService?> b = await UniversalBle.discoverServices(deviceId);
     print("Services obtained");
-    reads = b.firstWhere((t) => t.uuid == BigPharma.service, orElse: null);
+    reads = b.firstWhere((t) => t!.uuid == BigPharma.service, orElse: () => null);
     if (reads == null) {
       return false;
     }
-    print("Service id " + reads!.uuid);
+    print("Service id ${reads!.uuid}");
     //
     return true;
   }
 
   Future<String> update(MyAppState s) async {
     if (meter == null) {
-      return "no meter connected for " + name;
+      return "no meter connected for $name";
     }
     BleConnectionState isconnected = await meter!.connectionState;
     if (isconnected != BleConnectionState.connected ||
@@ -64,12 +64,12 @@ class Glucometer {
     try {
       us = await UniversalBle.readValue(
           meter!.deviceId, reads!.uuid, BigPharma.tocomm);
-      print("Baby First Bytes: " + us.toString());
+      print("Baby First Bytes: $us");
     } catch (e) {
       print(e);
     }
     int n = decodeNum(us);
-    print("num readings: " + n.toString() + ",");
+    print("num readings: $n,");
     //Map m = jsonDecode(String.fromCharCodes(us));
     for (int i = lastsuccessfulindex; i < n; i++) {
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid,
@@ -78,17 +78,15 @@ class Glucometer {
       print("request reading $i");
       String st = String.fromCharCodes(await UniversalBle.readValue(
           meter!.deviceId, reads!.uuid, BigPharma.indexchange));
-      print("raw reading " + st);
+      print("raw reading $st");
       GlucoReading r = GlucoReading(jsonDecode(st));
-      print("REAADING OBTAINED: " +
-          [
+      print("REAADING OBTAINED: ${[
             r.timestamp.toIso8601String(),
             r.value.toString(),
             r.meal,
             r.measure_method,
             r.comment
-          ].toString() +
-          ",");
+          ]},");
       if (!s.myReadings.any((GlucoReading e) => e.timestamp == r.timestamp)) {
         s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
         fin += "Sending new info to serv,";
@@ -128,8 +126,8 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   Map<String, BleDevice?>? glucometer;
   _ConnectGlucometerState({this.glucometer});
   void err(String msg) {
-    errormsg = msg + "  " + PermissionHandler.errorJunk;
-    print("BLE: " + msg);
+    errormsg = "$msg  ${PermissionHandler.errorJunk}";
+    print("BLE: $msg");
   }
 
   @override
@@ -158,15 +156,15 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    if (!bleDevices.isEmpty) glucometer!["dev"] = bleDevices[0];
+    if (bleDevices.isNotEmpty) glucometer!["dev"] = bleDevices[0];
     return Column(
       children: [
         Text(errormsg),
         Row(children: [
           ElevatedButton(
             child: isscanning
-                ? Text("Stop Search")
-                : Text("Search for Glucometers"),
+                ? const Text("Stop Search")
+                : const Text("Search for Glucometers"),
             onPressed: () async {
               PermissionHandler.errorJunk = "";
               if (!isscanning) {
@@ -200,7 +198,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                   err("Bootuth Enabled? $v");
                   setState(() {});
                 },
-                child: Text("Enable Bluetooth")),
+                child: const Text("Enable Bluetooth")),
           if (BleCapabilities.requiresRuntimePermission)
             ElevatedButton(
                 onPressed: () async {
@@ -212,7 +210,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                     setState(() {});
                   }
                 },
-                child: Text("Check Permissions")),
+                child: const Text("Check Permissions")),
           if (BleCapabilities.supportsConnectedDevicesApi)
             ElevatedButton(
                 onPressed: () async {
@@ -226,7 +224,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                     bleDevices.addAll(devs);
                   });
                 },
-                child: Text("List Connected Devices")),
+                child: const Text("List Connected Devices")),
           if (bleDevices.isNotEmpty)
             ElevatedButton(
                 onPressed: () {
@@ -234,15 +232,15 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                     bleDevices.clear();
                   });
                 },
-                child: Text("Clear List"))
+                child: const Text("Clear List"))
         ]),
         Text("BLE Availability: ${avSt?.name}"),
         Divider(color: Colors.green.shade900),
         Container(
             child: isscanning && bleDevices.isEmpty
-                ? Center(child: CircularProgressIndicator.adaptive())
+                ? const Center(child: CircularProgressIndicator.adaptive())
                 : !isscanning && bleDevices.isEmpty
-                    ? Text("Try connecting devices first")
+                    ? const Text("Try connecting devices first")
                     : ListView.separated(
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
@@ -253,7 +251,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
                                   : "") +
                               (dev.name != null ? dev.name! : dev.deviceId));
                         },
-                        separatorBuilder: (context, index) => Divider(),
+                        separatorBuilder: (context, index) => const Divider(),
                         itemCount: bleDevices.length))
       ],
     );
@@ -289,7 +287,7 @@ class _MidgetState extends State<Midget> {
   String message;
   _MidgetState({required this.message, required this.callback});
   Future<void> update() async {
-    await Future.delayed(Duration(seconds: 15));
+    await Future.delayed(const Duration(seconds: 15));
     callback();
     setState(() {});
   }
@@ -364,11 +362,7 @@ class PermissionHandler {
           ? (await Permission.locationWhenInUse.request()).isGranted
           : true;
     }
-    errorJunk += "Permission status: location->" +
-        locationPermissionGranted.toString() +
-        ", connect->" +
-        blePermissionGranted.toString() +
-        "; ";
+    errorJunk += "Permission status: location->$locationPermissionGranted, connect->$blePermissionGranted; ";
     return [locationPermissionGranted, blePermissionGranted];
   }
 

@@ -53,18 +53,17 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         break;
       case 1:
-        page = ConnectPage();//Expanded(child:ConnectGlucometer(glucometer:{"dev":null}));//connect, remove, and manage glucose monitors
+        page = const ConnectPage();//Expanded(child:ConnectGlucometer(glucometer:{"dev":null}));//connect, remove, and manage glucose monitors
         break;
       case 2:
         page = Settings(callback: logOut);//accoutn settings and stuff
         break;
       case 3:
-        page = SelectPatientsPage();//select and manage patients
+        page = const SelectPatientsPage();//select and manage patients
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
-    Function ss = setState;
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
@@ -98,10 +97,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                   currentIndex: selectedIndex,
                   onTap: (value) {
-                    if(!appState.ishttpying)
-                    setState((){
+                    if(!appState.ishttpying) {
+                      setState((){
                       selectedIndex = value;
                     });
+                    }
                   },
                   type: BottomNavigationBarType.fixed,
                 ),
@@ -114,18 +114,20 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 class MyFatHomePage extends StatefulWidget{
+  const MyFatHomePage({super.key});
+
   @override
   State<MyFatHomePage> createState() => _MyFatHomePageState();
 }
 
 class _MyFatHomePageState extends State<MyFatHomePage> {
   String m = "Adios";
-  Map<String, Function?> s = Map();
+  Map<String, Function?> s = {};
   @override
   Widget build(BuildContext ctx){
     s = {'cb': null};
     MyAppState appState = ctx.watch<MyAppState>();
-    return Column(children: [Expanded(child: MyHomePage()),
+    return Column(children: [const Expanded(child: MyHomePage()),
     Midget(message: m, callback: ()async{print("MIDGET!!");return await appState.updateGlucometers(s["cb"]);})]);
   }
 }

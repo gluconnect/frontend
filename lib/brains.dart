@@ -83,7 +83,7 @@ class MyAppState extends ChangeNotifier {
   }
 
   Future<http.Response> tagTimeout(Future<http.Response> r) {
-    return r.timeout(Duration(seconds: 5));
+    return r.timeout(const Duration(seconds: 5));
   }
 
   Future<int> addReading(
@@ -132,7 +132,7 @@ class MyAppState extends ChangeNotifier {
           '{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
       dynamic ss = jsonDecode(
           '{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
-      print("suxes " + ss.toString());
+      print("suxes $ss");
       nup = true;
       myReadings.add(GlucoReading(ss));
       print(myReadings);
@@ -268,7 +268,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<List?> getPatients() async {
     Future<http.Response> getPT(String u, String p) async {
-      print(u + " " + p);
+      print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_patients'),
@@ -300,7 +300,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       List res = jsonDecode(rp.body);
       print(res);
       patients =
@@ -344,7 +344,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       List res = jsonDecode(rp.body);
       print(res);
       caretakers =
@@ -388,7 +388,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       List<dynamic> res = jsonDecode(rp.body);
       print(res);
       try {
@@ -435,7 +435,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       List<dynamic> res = jsonDecode(rp.body);
       try {
         patientReadings = res.map((v) => GlucoReading(v)).toList();
@@ -480,9 +480,9 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       String s = rp.body;
-      print("name obtained: " + s);
+      print("name obtained: $s");
       //lastinfo['othreshold'] = threshold.toString();
       return s;
     } else {
@@ -521,7 +521,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       String s = rp.body;
       //lastinfo['othreshold'] = threshold.toString();
       return s;
@@ -563,7 +563,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       print("got threshold in req");
       double threshold = double.parse(rp.body);
       lastinfo['threshold'] = threshold.toString();
@@ -605,7 +605,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       double threshold = double.parse(rp.body);
       lastinfo['othreshold'] = threshold.toString();
       return threshold;
@@ -616,7 +616,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<double?> changeThreshold(double nname) async {
     Future<http.Response> change(String u, String p, double nname) async {
-      print(u + " " + p);
+      print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_threshold'),
@@ -646,7 +646,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       return double.parse(rp.body);
     } else {
       return null;
@@ -655,7 +655,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<String?> changeName(String nname) async {
     Future<http.Response> change(String u, String p, String nname) async {
-      print(u + " " + p);
+      print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_name'),
@@ -685,7 +685,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       lastinfo["name"] = rp.body;
       return rp.body;
     } else {
@@ -695,7 +695,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<String?> changePass(String npass) async {
     Future<http.Response> change(String u, String p, String npass) async {
-      print(u + " " + p);
+      print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_password'),
@@ -725,7 +725,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       lastinfo["pass"] = npass;
       return rp.body;
     } else {
@@ -819,7 +819,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<int> deleteAccount() async {
     Future<http.Response> change(String u, String p) async {
-      print(u + " " + p);
+      print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/delete'),
@@ -851,7 +851,7 @@ class MyAppState extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    if (rp != null && rp!.statusCode == 200) {
+    if (rp != null && rp.statusCode == 200) {
       logOut();
       return rp.statusCode;
     } else {
