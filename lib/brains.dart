@@ -43,7 +43,7 @@ class MyAppState extends ChangeNotifier {
   List caretakers = <Caretaker>[];
   List patients = <Patient>[];
   List<GlucoReading> readings = <GlucoReading>[];
-  List readings2 = <GlucoReading>[];
+  List patientreadings = <GlucoReading>[];
   var lastinfo = {"user": "", "pass": "", "name": ""};
   //var URL = "http://occidentalis.local:8008";
   var URL = "http://localhost:8008";
@@ -397,8 +397,8 @@ ishttpying = false;
     } catch(e){print(e);}
     if(rp!=null&&rp!.statusCode==200){
       List<dynamic> res = jsonDecode(rp.body);
-      try{readings2 = res.map((v)=>GlucoReading(v)).toList();print(readings2);}catch(e){return null;}
-      return readings2;
+      try{patientreadings = res.map((v)=>GlucoReading(v)).toList();print(patientreadings);}catch(e){return null;}
+      return patientreadings;
     }else{
       return null;
     }
