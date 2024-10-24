@@ -49,6 +49,9 @@ class MyAppState extends ChangeNotifier {
   List patients = <Patient>[];
   List<GlucoReading> myReadings = <GlucoReading>[];
   List<GlucoReading> patientReadings = <GlucoReading>[];
+  bool readingscorrect = false;
+  bool patientreadingscorrect = false;
+  String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
   //var URL = "http://occidentalis.local:8008";
   var URL = "http://localhost:8008";
@@ -135,6 +138,7 @@ class MyAppState extends ChangeNotifier {
       print("suxes $ss");
       nup = true;
       myReadings.add(GlucoReading(ss));
+      readingscorrect = false;
       print(myReadings);
       notifyListeners();
     } else {
@@ -398,6 +402,8 @@ class MyAppState extends ChangeNotifier {
         return null;
       }
       print(myReadings);
+      readingscorrect = true;
+      notifyListeners();
       return myReadings;
     } else {
       return null;
@@ -443,6 +449,9 @@ class MyAppState extends ChangeNotifier {
       } catch (e) {
         return null;
       }
+
+      patientreadingscorrect = true;
+      notifyListeners();
       return patientReadings;
     } else {
       return null;
@@ -815,6 +824,8 @@ class MyAppState extends ChangeNotifier {
     lastinfo["user"] = "";
     lastinfo["pass"] = "";
     userIsAuthed = false;
+    myReadings = [];
+    readingscorrect = false;
   }
 
   Future<int> deleteAccount() async {
