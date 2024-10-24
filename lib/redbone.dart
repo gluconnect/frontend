@@ -31,7 +31,7 @@ class Glucometer{
     print("Device connected");
     List<BleService> b = await UniversalBle.discoverServices(deviceId);
     print("Services obtained");
-    reads = b.firstWhere((t)=>t.uuid==BigPharma.service);
+    reads = b.firstWhere((t)=>t.uuid==BigPharma.service, orElse: null);
     if(reads==null){
       return false;
     }
