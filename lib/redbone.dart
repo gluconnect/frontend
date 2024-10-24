@@ -10,9 +10,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 class BigPharma{
-  static var service = "A07498CA-AD58-474E-940D-16F1FBE7E8CD";
-  static var indexchange = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B";
-  static var tocomm = "bfc0c92f-317d-4ba9-976b-cc11ce77b4ca";
+  static var service = BleUuidParser.string("A07498CA-AD58-474E-940D-16F1FBE7E8CD");
+  static var indexchange = BleUuidParser.string("51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B");
+  static var tocomm = BleUuidParser.string("bfc0c92f-317d-4ba9-976b-cc11ce77b4ca");
 }
 class Glucometer{
   static var count = 1;
@@ -112,13 +112,13 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
         bleDevices[i] = res;
       }
       setState(() {
-        glucometer!["dev"] = res;
       });
     };
   }
   @override
   Widget build(BuildContext context){
     var appState = context.watch<MyAppState>();
+    if(!bleDevices.isEmpty)glucometer!["dev"] = bleDevices[0];
     return Column(
       children: [
         Text(errormsg),
@@ -311,34 +311,5 @@ class PermissionHandler {
     if (kIsWeb || !Platform.isAndroid) return false;
     AndroidDeviceInfo androidInfo = await DeviceInfoPlugin().androidInfo;
     return androidInfo.version.sdkInt >= 31;
-  }
-}
-Future<void> connectGlucometer() async{
-  void decode(Uint8List s){
-    //
-  }
-  //connect to glucometer when available, and obtain service to get readings
-  UniversalBle.onScanResult = (BleDevice bleDevice) async {
-    var deviceId = bleDevice.deviceId;
-    print("Device found "+deviceId);
-    await UniversalBle.connect(deviceId);
-    print("Device connected");
-    List<BleService> b = await UniversalBle.discoverServices(deviceId);
-    print("Services obtained");
-    BleService s = b.firstWhere((t)=>t.uuid=='0x1808');
-    print("Service id "+s.uuid);
-    Uint8List us = await UniversalBle.readValue(deviceId, s.uuid, '0000-00001-'+deviceId);
-    decode(us);
-  };
-  AvailabilityState state = await UniversalBle.getBluetoothAvailabilityState();
-  // Start scan only if Bluetooth is powered on, make sure it is, if not, request perms
-  print(state);
-  if (state == AvailabilityState.poweredOn) {
-    print("Starting scan");
-    UniversalBle.startScan(
-      /*scanFilter: ScanFilter(
-        withServices: ["0x1808"]
-      )*/
-    );
   }
 }
