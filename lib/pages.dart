@@ -233,6 +233,7 @@ class _HomePageState extends State<HomePage> {
   String errormsg = "";
   bool waitfornext = false;
   bool nthres = false;
+  bool firsttime = true;
   double currthres = 0;
   String currname = "";
   String oemail;
@@ -279,7 +280,11 @@ class _HomePageState extends State<HomePage> {
     String title =
         oemail == "" ? "Welcome, $oname!" : "Viewing $oname's readings";
     //appState.addGlucometers();
-    if (nthres) {
+    if(firsttime){
+      firsttime = false;
+      if(oemail=="")appState.getReadingsFromServerToLocal();
+      else appState.getPatientReadingsFromServerToLocal(oemail);
+    }else if (nthres) {
       final formKey = GlobalKey<FormState>();
       TextEditingController userc = TextEditingController();
       return Center(

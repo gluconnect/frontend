@@ -54,7 +54,7 @@ class MyAppState extends ChangeNotifier {
   String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
   var URL = "http://occidentalis.local:8008";
-  // var URL = "http://localhost:8008";
+  //var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
   bool istoothing = false;
