@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'brains.dart';
 import 'pages.dart';
 import 'redbone.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences test = await SharedPreferences.getInstance();
+  print(test);
   runApp(const MyApp());
 }
 
@@ -13,8 +17,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
+    return MultiProvider(
+      providers:[
+        ChangeNotifierProvider(create: (_)=>MyAppState()),
+        ChangeNotifierProvider(create: (_)=>LocalStorageState())
+      ],
       child: MaterialApp(
         title: 'GLUCONNECT',
         theme: ThemeData(
@@ -126,10 +133,10 @@ class MyFatHomePage extends StatefulWidget {
 
 class _MyFatHomePageState extends State<MyFatHomePage> {
   Map<String, Function?> s = {};
-
   @override
   Widget build(BuildContext ctx) {
     s = {'cb': null};
+    //ONLY BUILD ONCE
     MyAppState appState = Provider.of<MyAppState>(ctx, listen: false);
     return Column(children: [
       const Expanded(child: MyHomePage()),

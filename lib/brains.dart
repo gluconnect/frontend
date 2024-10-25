@@ -4,6 +4,7 @@ import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'redbone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Caretaker {
   static var count = 1;
@@ -53,8 +54,8 @@ class MyAppState extends ChangeNotifier {
   bool patientreadingscorrect = false;
   String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
-  var URL = "http://occidentalis.local:8008";
-  //var URL = "http://localhost:8008";
+  //var URL = "http://occidentalis.local:8008";
+  var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
   bool istoothing = false;
@@ -749,7 +750,7 @@ class MyAppState extends ChangeNotifier {
     }
   }
 
-  Future<int> logIn(username, password, serv) async {
+  Future<int> logIn(username, password, serv, LocalStorageState ls) async {
     print("${"User: " + username} Password: " + password);
 
     Future<int> logInHTTP(String u, String p) async {
@@ -789,6 +790,7 @@ class MyAppState extends ChangeNotifier {
     if (rp == 200) {
       lastinfo["user"] = username;
       lastinfo["pass"] = password;
+      ls.updateLoginInfo(lastinfo);
     }
 
     return rp;
@@ -830,15 +832,16 @@ class MyAppState extends ChangeNotifier {
     return rp;
   }
 
-  void logOut() {
+  Future<void> logOut(LocalStorageState ls) async{
     lastinfo["user"] = "";
     lastinfo["pass"] = "";
     userIsAuthed = false;
     myReadings = [];
     readingscorrect = false;
+    await ls.clearLoginInfo();
   }
 
-  Future<int> deleteAccount() async {
+  Future<int> deleteAccount(LocalStorageState ls) async {
     Future<http.Response> change(String u, String p) async {
       print("$u $p");
       ishttpying = true;
@@ -873,10 +876,62 @@ class MyAppState extends ChangeNotifier {
       print(e);
     }
     if (rp != null && rp.statusCode == 200) {
-      logOut();
+      await logOut(ls);
       return rp.statusCode;
     } else {
       return 0;
     }
+  }
+}
+class LocalStorageState extends ChangeNotifier{
+  SharedPreferencesAsync? prefs;
+  LocalStorageState(){
+    initPrefs();
+  }
+  void initPrefs()async{
+    prefs = SharedPreferencesAsync();
+  }
+  void updateLoginInfo(Map<String, String> loginfo) async{
+    await prefs?.setString("authuser", loginfo["user"]!);
+    await prefs?.setString("authpass", loginfo["pass"]!);
+    print("updating local info "+loginfo.toString());
+  }
+  void updateGlucometerInfo(List<Glucometer> l) async{
+    List<String> res = [];
+    for(Glucometer g in l){
+      if(g.meter!=null){
+        res.add(g.meter!.deviceId);
+      }
+    }
+    await prefs?.setStringList("bleglucometers", res);
+  }
+  void tryFetchLoginInfo(MyAppState s) async{
+    if(prefs==null){
+      print("login fetch: No preferences");
+      initPrefs();
+      print("nevermind");
+      if(prefs==null)return;
+    }
+    String? user = await prefs!.getString("authuser");
+    String? pass = await prefs!.getString("authpass");
+    if(user!=null&&pass!=null){
+      s.lastinfo['user'] = user;
+      s.lastinfo['pass'] = pass;
+      print("login info found");
+      notifyListeners();
+    }
+  }
+  void tryFetchGlucometerInfo(MyAppState s) async{
+    if(prefs==null)return;
+    List<String>? gms = await prefs!.getStringList("bleglucometers");
+    if(gms!=null){
+      //
+      notifyListeners();
+    }
+  }
+  Future<void> clearLoginInfo() async{
+    if(prefs==null)return;
+    await prefs?.clear();
+    print("cleared log in info");
   }
 }

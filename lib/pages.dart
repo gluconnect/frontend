@@ -18,12 +18,13 @@ class _LogInPageState extends State<LogInPage> {
   var islogin = true;
   Function? callback;
   String message = "";
+  bool triedlogin = false;
   _LogInPageState({this.callback});
   Future<void> doTheThing(
-      MyAppState s, String u, String p, String n, String v) async {
+      MyAppState s, String u, String p, String n, String v, LocalStorageState ls) async {
     if (islogin) {
       FutureOr<int> f = 0;
-      var rep = await s.logIn(u, p, v);
+      var rep = await s.logIn(u, p, v, ls);
       if (rep == 200) {
         setState(() {
           if (callback != null) {
@@ -36,10 +37,12 @@ class _LogInPageState extends State<LogInPage> {
       } else if (rep == 401) {
         setState(() {
           message = "Email or password is incorrect";
+          triedlogin = true;
           islogin = true;
         });
       } else {
         setState(() {
+          triedlogin = true;
           message = "Something went wrong, please try again later";
         });
       }
@@ -65,11 +68,20 @@ class _LogInPageState extends State<LogInPage> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    var appState = Provider.of<MyAppState>(context, listen: false);
+    LocalStorageState ls = context.watch<LocalStorageState>();//notify listerners will call
     final formKey = GlobalKey<FormState>();
     TextEditingController userc = TextEditingController();
     TextEditingController passc = TextEditingController();
     TextEditingController nickc = TextEditingController();
+    if(islogin){
+      if(appState.lastinfo["user"]!=""||appState.lastinfo["pass"]!=""&&!triedlogin){
+        doTheThing(appState, appState.lastinfo["user"]!, appState.lastinfo["pass"]!, "", appState.URL, ls);
+      }else{
+        print("Trying to get local login info");
+        ls.tryFetchLoginInfo(appState);
+      }
+    }
     //TextEditingController nick2c = TextEditingController();
     return Center(
       child: Container(
@@ -185,7 +197,7 @@ class _LogInPageState extends State<LogInPage> {
                             if (formKey.currentState!.validate()) {
                               //_formKey.currentState.save();
                               doTheThing(appState, userc.text, passc.text,
-                                  nickc.text, appState.URL /*nick2c.text*/);
+                                  nickc.text, appState.URL, ls);
                             }
                           },
                           child: const Text('Submit'),
@@ -656,8 +668,8 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  Future<void> deleteAccount(MyAppState mas) async {
-    int n = await mas.deleteAccount();
+  Future<void> deleteAccount(MyAppState mas, LocalStorageState lss) async {
+    int n = await mas.deleteAccount(lss);
     if (n == 200) if (callback != null) {
       callback!();
     } else {
@@ -719,8 +731,8 @@ class _SettingsState extends State<Settings> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                      onPressed: () {
-                        appState.logOut();
+                      onPressed: () async {
+                        await appState.logOut(Provider.of<LocalStorageState>(context, listen: false));
                         if (callback != null) {
                           callback!();
                         }
@@ -765,7 +777,7 @@ class _SettingsState extends State<Settings> {
             ),
             ElevatedButton(
                 onPressed: () {
-                  deleteAccount(appState);
+                  deleteAccount(appState, context.read<LocalStorageState>());
                 },
                 child: const Text("DELETE ACCOUNT")),
           ],
