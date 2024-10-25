@@ -16,69 +16,72 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(session({ saveUninitialized: true, resave: true, secret: "ogbdfoodbkfpobfskpod32332323|_+sevsdvv//?~ZZ" }));
-var Users = [{
-        id: 'jack',
-        name: "jackk",
-        password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1',
-        readings: [
-            {
-                time: new Date('December 17, 1995 03:24:00'),
-                value: 120.4,
-                meal: 'After Meal',
-                comment: '',
-                measure_method: 'blood sample',
-                extra_data: new Map()
-            },
-            {
-                time: new Date('December 21, 1997 02:14:03'),
-                value: 110.2,
-                meal: 'Before Meal',
-                comment: '',
-                measure_method: 'blood sample',
-                extra_data: new Map()
-            }
-        ]
-    },
-    {
-        id: 'jack2',
-        name: "jackk2",
-        password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'
-    }];
+var Users = [
+{
+	id: 'jack',
+	name: "jackk",
+	password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1',
+	readings: [
+		{
+			time: new Date('December 17, 1995 03:24:00'),
+			value: 120.4,
+			meal: 'After Meal',
+			comment: '',
+			measure_method: 'blood sample',
+			extra_data: new Map()
+		},
+		{
+			time: new Date('December 21, 1997 02:14:03'),
+			value: 110.2,
+			meal: 'Before Meal',
+			comment: '',
+			measure_method: 'blood sample',
+			extra_data: new Map()
+		}
+	]
+},
+{
+	id: 'jack2',
+	name: "jackk2",
+	password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'
+},
+{
+	id: 'stan',
+	name: "Stanley",
+	password: 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1',
+	readings: [
+		{
+			time: new Date('December 17, 2000 03:26:00'),
+			value: 123.4,
+			meal: 'After Meal',
+			comment: '',
+			measure_method: 'blood sample',
+			extra_data: new Map()
+		},
+	]
+},
+
+];
 function toReading(x) {
-    var glooc = {
-        time: new Date(),
+    let ret = {
+        time: new Date(x["time"]),
         value: x.value,
         meal: x.meal,
         comment: x.comment,
         measure_method: x.measure_method,
         extra_data: new Map
     };
-    //decode timestamp
-    var _a = x.time.split('T'), datePart = _a[0], timePart = _a[1];
-    var _b = datePart.split('-'), year = _b[0], month = _b[1], day = _b[2];
-    var _c = timePart.split(':'), hours = _c[0], minutes = _c[1], seconds = _c[2];
-    glooc.time = new Date(year, month - 1, day, hours, minutes, seconds);
-    //
-    return glooc;
+    return ret;
 }
 function serializeReading(x) {
-    var glooc = {
-        time: "",
-        value: x.value,
+    return {
+        time: x.time.toISOString(),
+        value: x.value + 0.01,
         meal: x.meal,
         comment: x.comment,
         measure_method: x.measure_method,
-        extra_data: ""
+        extra_data: "{}"
     };
-    var date = x.time;
-    var year = date.getFullYear();
-    var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-    var day = String(date.getDate()).padStart(2, '0');
-    var hours = String(date.getHours()).padStart(2, '0');
-    var minutes = String(date.getMinutes()).padStart(2, '0');
-    var seconds = String(date.getSeconds()).padStart(2, '0');
-    glooc.time = "".concat(year, "-").concat(month, "-").concat(day, "T").concat(hours, ":").concat(minutes, ":").concat(seconds);
-    return glooc;
 }
 //NumerIt code
 function hash(value) {
@@ -151,6 +154,7 @@ function checkLogin(req, res, next) {
         next(err);
     }
 }
+
 app.post('/add_reading', checkLogin, function (req, res) {
     if (!req.body) { //TODO: VALIDATE BODY
         res.sendStatus(401);
@@ -160,8 +164,6 @@ app.post('/add_reading', checkLogin, function (req, res) {
         if (!user.readings)
             user.readings = [];
         var reading = void 0;
-        console.log("Add reading: ");
-        console.log(req.body);
         try {
             reading = toReading(req.body);
         }
@@ -170,8 +172,7 @@ app.post('/add_reading', checkLogin, function (req, res) {
             return;
         }
         user.readings.push(reading);
-        console.log("New readings ");
-        console.log(user.readings);
+        console.log("new reading added to", user.name);
         /*if (user.threshold && req.body.value > user.threshold && user.viewers) {
             for (var _i = 0, _a = user.viewers; _i < _a.length; _i++) {
                 var v = _a[_i];
@@ -186,11 +187,12 @@ app.post('/add_reading', checkLogin, function (req, res) {
 });
 app.post('/get_readings', checkLogin, function (req, res) {
     var user = getUser(req);
-    console.log(user.readings);
     if (!user.readings)
         user.readings = [];
+    console.log("sending readings to",user.name)
     res.status(200).json(user.readings.map(function (i) { return serializeReading(i); }));
 });
+
 app.post('/clear_readings', checkLogin, function (req, res) {
     var user = getUser(req);
     console.log(user.readings);
@@ -204,6 +206,7 @@ app.post('/spectate_readings', checkLogin, function (req, res) {
         return;
     }
     var u = getUser({ body: { email: req.body.uemail } });
+    console.log("sending",u,"readings to", user)
     res.status(200).json(u.readings.map(function (i) { return serializeReading(i); }));
 });
 app.post('/get_viewers', checkLogin, function (req, res) {

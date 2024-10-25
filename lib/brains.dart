@@ -21,7 +21,7 @@ class Patient {
 
 class GlucoReading {
   DateTime timestamp = DateTime(0);
-  double value = 0;
+  double value = 0.0;
   String meal = "Before Meal";
   String comment = "";
   String measure_method = "blood sample";
@@ -53,8 +53,8 @@ class MyAppState extends ChangeNotifier {
   bool patientreadingscorrect = false;
   String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
-  //var URL = "http://occidentalis.local:8008";
-  var URL = "http://localhost:8008";
+  var URL = "http://occidentalis.local:8008";
+  // var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
   bool istoothing = false;
@@ -89,10 +89,16 @@ class MyAppState extends ChangeNotifier {
     return r.timeout(const Duration(seconds: 5));
   }
 
-  Future<int> addReading(
-      DateTime timestamp, double value, meal, method, comments) async {
-    Future<int> addCT(String u, String p, DateTime timestamp, double value,
-        meal, method, comments) async {
+  bool alreadyHaveReadingLocally(DateTime reading_timestamp) {
+    return myReadings.any((GlucoReading e) => reading_timestamp == e.timestamp);
+  }
+
+  Future<int> addReadingLocallyAndToServer( DateTime timestamp, double value, meal, method, comments) async {
+    if (alreadyHaveReadingLocally(timestamp)) {
+      return 0;
+    }
+
+    Future<int> sendReadingToServer(String u, String p, DateTime timestamp, double value, meal, method, comments) async {
       ishttpying = true;
       final response = await tagTimeout(http.post(
         Uri.parse('$URL/add_reading'),
@@ -125,7 +131,7 @@ class MyAppState extends ChangeNotifier {
     int rp = 500;
     try {
       print("ADDDDDD");
-      rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value,
+      rp = await sendReadingToServer(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value,
           meal, method, comments);
     } catch (e) {
       print(e);
@@ -315,8 +321,8 @@ class MyAppState extends ChangeNotifier {
     }
   }
 
-  Future<List?> getCaretakers() async {
-    Future<http.Response> getCT(String u, String p) async {
+  Future<List?> getCaretakersFromServerToLocal() async {
+    Future<http.Response> getCaretakersHTTP(String u, String p) async {
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_viewers'),
@@ -344,7 +350,7 @@ class MyAppState extends ChangeNotifier {
 
     http.Response? rp;
     try {
-      rp = await getCT(lastinfo["user"]!, lastinfo["pass"]!);
+      rp = await getCaretakersHTTP(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
       print(e);
     }
@@ -359,8 +365,8 @@ class MyAppState extends ChangeNotifier {
     }
   }
 
-  Future<List?> getReadings() async {
-    Future<http.Response> getRD(String u, String p) async {
+  Future<List?> getReadingsFromServerToLocal() async {
+    Future<http.Response> getReadingsFromServerHTTP(String u, String p) async {
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_readings'),
@@ -388,7 +394,7 @@ class MyAppState extends ChangeNotifier {
 
     http.Response? rp;
     try {
-      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!);
+      rp = await getReadingsFromServerHTTP(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
       print(e);
     }
@@ -396,22 +402,23 @@ class MyAppState extends ChangeNotifier {
       List<dynamic> res = jsonDecode(rp.body);
       print(res);
       try {
-        myReadings = res.map((v) => GlucoReading(v)).toList();
+        this.myReadings = res.map((v) => GlucoReading(v)).toList();
       } catch (e) {
         print(e);
         return null;
       }
-      print(myReadings);
+      print("myReadings now: $myReadings");
       readingscorrect = true;
       notifyListeners();
+
       return myReadings;
     } else {
       return null;
     }
   }
 
-  Future<List?> spectateReadings(otheremail) async {
-    Future<http.Response> getRD(String u, String p, String o) async {
+  Future<List?> getPatientReadingsFromServerToLocal(otheremail) async {
+    Future<http.Response> getPatientReadingsFromServerHTTP(String u, String p, String o) async {
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/spectate_readings'),
@@ -437,7 +444,7 @@ class MyAppState extends ChangeNotifier {
 
     http.Response? rp;
     try {
-      rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
+      rp = await getPatientReadingsFromServerHTTP(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
     } catch (e) {
       print(e);
     }
@@ -744,7 +751,8 @@ class MyAppState extends ChangeNotifier {
 
   Future<int> logIn(username, password, serv) async {
     print("${"User: " + username} Password: " + password);
-    Future<int> logIn(String u, String p) async {
+
+    Future<int> logInHTTP(String u, String p) async {
       ishttpying = true;
       final response = await tagTimeout(http.post(
         Uri.parse('$URL/verify'),
@@ -759,6 +767,7 @@ class MyAppState extends ChangeNotifier {
         // then parse the JSON.
         userIsAuthed = true;
         lastinfo["name"] = response.body;
+
         return response.statusCode; // as Map<String, String>;
       } else if (response.statusCode == 401) {
         // If the server did not return a 200 OK response,
@@ -772,15 +781,16 @@ class MyAppState extends ChangeNotifier {
     int rp = 500;
     URL = serv;
     try {
-      rp = await logIn(username, password);
+      rp = await logInHTTP(username, password);
     } catch (e) {
       print(e);
     }
-    print(rp);
+
     if (rp == 200) {
       lastinfo["user"] = username;
       lastinfo["pass"] = password;
     }
+
     return rp;
   }
 

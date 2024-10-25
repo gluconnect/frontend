@@ -24,7 +24,6 @@ class Glucometer {
   Glucometer({this.id = 0, this.name = "Glucometer", this.meter});
   String name = "HELLOWORLD";
   int id;
-  int lastsuccessfulindex = 450;
   BleDevice? meter;
   BleService? reads;
   Future<bool> connect() async {
@@ -37,7 +36,7 @@ class Glucometer {
     print("Device connected");
     List<BleService?> b = await UniversalBle.discoverServices(deviceId);
     print("Services obtained");
-    reads = b.firstWhere((t) => t!.uuid == BigPharma.service, orElse: () => null);
+    reads = b.firstWhere((t) => t!.uuid == BigPharma.service, orElse: null);
     if (reads == null) {
       return false;
     }
@@ -69,9 +68,10 @@ class Glucometer {
       print(e);
     }
     int n = decodeNum(us);
-    print("num readings: $n,");
+    print("DECODED num readings: $n,");
     //Map m = jsonDecode(String.fromCharCodes(us));
-    for (int i = lastsuccessfulindex; i < n; i++) {
+    n = n > 7 ? 7 : n;
+    for (int i = 0; i < n; i++) {
       await UniversalBle.writeValue(meter!.deviceId, reads!.uuid,
           BigPharma.indexchange, encodeNum(i), BleOutputProperty.withResponse);
       fin += "requesting reading $i,";
@@ -87,13 +87,12 @@ class Glucometer {
             r.measure_method,
             r.comment
           ]},");
-      if (!s.myReadings.any((GlucoReading e) => e.timestamp == r.timestamp)) {
-        s.addReading(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
+      if (!s.alreadyHaveReadingLocally(r.timestamp)) {
+        s.addReadingLocallyAndToServer(r.timestamp, r.value, r.meal, r.measure_method, r.comment);
         fin += "Sending new info to serv,";
         //s.scheduleUpdate();
       }
     }
-    lastsuccessfulindex = n;
     return fin;
   }
 

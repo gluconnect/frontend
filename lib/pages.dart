@@ -240,7 +240,7 @@ class _HomePageState extends State<HomePage> {
   _HomePageState({this.oemail = "", this.ccb});
   Future<void> addReading(
       MyAppState s, DateTime timec, double valc, mealc, methc, commc) async {
-    int result = await s.addReading(timec, valc, mealc, methc, commc);
+    int result = await s.addReadingLocallyAndToServer(timec, valc, mealc, methc, commc);
     print("reading appears");
     if (result == 200) {
       //
@@ -269,13 +269,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    appState.addListener(() {
-      setState(() {
-        needsupdate = true;
-      });
-    });
-    String oname = currname;
+    var appState = Provider.of<MyAppState>(context);
+    // appState.addListener(() {
+    //   setState(() {
+    //     needsupdate = true;
+    //   });
+    // });
+    String oname = appState.lastinfo["name"]!;
     String title =
         oemail == "" ? "Welcome, $oname!" : "Viewing $oname's readings";
     //appState.addGlucometers();
@@ -547,7 +547,8 @@ class _HomePageState extends State<HomePage> {
       Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Text('${oemail == "" ? "You have" : oname + " has"} 123123 glucose readings'),
+          child: Text('${oemail == "" ? "You have" : oname + " has"} ${oemail == "" ? appState.myReadings.length
+           : appState.patientReadings.length} glucose readings'),
         ),
       ),
       if (oemail == "")
@@ -586,14 +587,14 @@ class _HomePageState extends State<HomePage> {
                     const Divider(color: Colors.black, thickness: 2.0),
                 ]),
                 // Use SomeExpensiveWidget here, without rebuilding every time.
-                for (GlucoReading i in value.myReadings)
+                for (GlucoReading i in (oemail == "" ? value.myReadings : value.patientReadings))
                   TableRow(
                     children: [
                       Text(i.timestamp.toString(),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(i.meal,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text((i.value).toString(),
+                      Text((i.value).toStringAsFixed(0),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(i.measure_method,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -1364,7 +1365,7 @@ class _CaretakerListState extends State<CaretakerList> {
     //var clist = await s.getCaretakers();
     if (waitfornext) await Future.delayed(const Duration(seconds: 5));
     print("starting request");
-    var plist = await s.getCaretakers();
+    var plist = await s.getCaretakersFromServerToLocal();
     print("request complete");
     if (plist != null) {
       setState(() {
