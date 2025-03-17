@@ -27,6 +27,7 @@ class GlucoReading {
   String comment = "";
   String measure_method = "blood sample";
   Map<String, dynamic>? extra_data;
+  bool isDangerous = false;
   GlucoReading(dynamic thing) {
     timestamp = DateTime.parse(thing['time']);
     value = thing['value'];
@@ -54,7 +55,7 @@ class MyAppState extends ChangeNotifier {
   bool patientreadingscorrect = false;
   String lastreadingsemail = "";
   var lastinfo = {"user": "", "pass": "", "name": ""};
-  //var URL = "http://occidentalis.local:8008";
+  // var URL = "http://occidentalis.local:8008";
   var URL = "http://localhost:8008";
   var servdowncode = 501;
   var ishttpying = false;
@@ -89,7 +90,24 @@ class MyAppState extends ChangeNotifier {
   Future<http.Response> tagTimeout(Future<http.Response> r) {
     return r.timeout(const Duration(seconds: 5));
   }
-
+  void flagReadings() {
+    for (GlucoReading g in myReadings) {
+      if (g.value >= double.parse(lastinfo['threshold']!)) {
+        g.isDangerous = true;
+      } else {
+        g.isDangerous = false;
+      }
+    }
+  }
+  void flagPatientReadings() {
+    for (GlucoReading g in patientReadings) {
+      if (g.value >= double.parse(lastinfo['othreshold']!)) {
+        g.isDangerous = true;
+      } else {
+        g.isDangerous = false;
+      }
+    }
+  }
   bool alreadyHaveReadingLocally(DateTime reading_timestamp) {
     return myReadings.any((GlucoReading e) => reading_timestamp == e.timestamp);
   }
@@ -145,6 +163,7 @@ class MyAppState extends ChangeNotifier {
       print("suxes $ss");
       nup = true;
       myReadings.add(GlucoReading(ss));
+      flagReadings();
       readingscorrect = false;
       print(myReadings);
       notifyListeners();
@@ -408,6 +427,7 @@ class MyAppState extends ChangeNotifier {
         print(e);
         return null;
       }
+      flagReadings();
       print("myReadings now: $myReadings");
       readingscorrect = true;
       notifyListeners();
@@ -453,6 +473,7 @@ class MyAppState extends ChangeNotifier {
       List<dynamic> res = jsonDecode(rp.body);
       try {
         patientReadings = res.map((v) => GlucoReading(v)).toList();
+        flagPatientReadings();
         print(patientReadings);
       } catch (e) {
         return null;
@@ -664,6 +685,8 @@ class MyAppState extends ChangeNotifier {
       print(e);
     }
     if (rp != null && rp.statusCode == 200) {
+      lastinfo['threshold'] = nname.toString();
+      flagReadings();
       return double.parse(rp.body);
     } else {
       return null;

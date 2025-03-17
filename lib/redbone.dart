@@ -8,7 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+//import 'dart:typed_data';
 
 class BigPharma {
   static var service =

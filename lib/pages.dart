@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:glucotest/main.dart';
+//import 'package:glucotest/main.dart';
 import 'package:provider/provider.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'redbone.dart';
@@ -32,7 +32,7 @@ class _LogInPageState extends State<LogInPage> {
               //
             });
           }
-          print("SD");
+          //print("SD");
         });
       } else if (rep == 401) {
         setState(() {
@@ -241,7 +241,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isconnecting = false; //adding readings manually?
-  bool needsupdate = true; //fetch readings first TODO(run every 10 seconds or so)
+  int needsupdate = 1; //fetch readings first TODO(run every 10 seconds or so)
   String errormsg = "";
   bool waitfornext = false;
   bool nthres = false;
@@ -269,7 +269,6 @@ class _HomePageState extends State<HomePage> {
     if (result != null) {
       currthres = result;
       setState(() {
-        needsupdate = true;
         nthres = false;
         errormsg = "Threshold updated successfully";
       });
@@ -277,6 +276,26 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         errormsg = "Something went wrong...";
       });
+    }
+  }
+  Future<void> loadThreshold(MyAppState s, String oemail) async {
+    needsupdate = 2;// now wait to fetch readings
+    if (oemail == "") {
+      double? d = await s.getThreshold();
+      if(d != null){
+        currthres = d;
+      }else{
+        currthres = -1; //no threshold set
+      }
+      currname = s.lastinfo["name"]!;
+    } else {
+      double? d = await s.spectateThreshold(oemail);
+      if(d != null){
+        currthres = d;
+      }else{
+        currthres = -1; //no threshold set
+      }
+      currname = oemail;
     }
   }
 
@@ -292,11 +311,17 @@ class _HomePageState extends State<HomePage> {
     String title =
         oemail == "" ? "Welcome, $oname!" : "Viewing $oname's readings";
     //appState.addGlucometers();
-    if(firsttime){
-      firsttime = false;
-      if(oemail=="")appState.getReadingsFromServerToLocal();
-      else appState.getPatientReadingsFromServerToLocal(oemail);
-    }else if (nthres) {
+    if(needsupdate==1){
+      loadThreshold(appState, oemail);
+    }else if(needsupdate==2){
+      needsupdate = 0;
+      if(oemail == ""){
+        appState.getReadingsFromServerToLocal();
+      }else{
+        appState.getPatientReadingsFromServerToLocal(oemail);
+      }
+    }
+    if (nthres) {
       final formKey = GlobalKey<FormState>();
       TextEditingController userc = TextEditingController();
       return Center(
@@ -375,10 +400,10 @@ class _HomePageState extends State<HomePage> {
       );
     } else if (isconnecting) {
       final formKey = GlobalKey<FormState>();
-      TextEditingController timec = TextEditingController();
-      TextEditingController methc = TextEditingController();
+      TextEditingController timec = TextEditingController(text: DateTime.now().toIso8601String());
+      TextEditingController methc = TextEditingController(text: "blood sample");
       TextEditingController valc = TextEditingController();
-      TextEditingController mealc = TextEditingController();
+      TextEditingController mealc = TextEditingController(text: "After Meal");
       TextEditingController commc = TextEditingController();
       return Center(
         //child: Container(
@@ -425,6 +450,9 @@ class _HomePageState extends State<HomePage> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter some text';
                             }
+                            if (DateTime.tryParse(value)==null) {
+                              return 'Please enter a valid ISO 8601 date';
+                            }
                             return null;
                           },
                         ),
@@ -456,6 +484,9 @@ class _HomePageState extends State<HomePage> {
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter some text';
+                            }
+                            if (!isNumeric(value)) {
+                              return 'Please enter a valid number';
                             }
                             return null;
                           },
@@ -505,10 +536,9 @@ class _HomePageState extends State<HomePage> {
                                   mealc.text,
                                   methc.text,
                                   commc.text);
-                              //TODO
                               setState(() {
+                                errormsg = "Reading added successfully";
                                 isconnecting = false;
-                                needsupdate = true;
                               });
                             }
                           },
@@ -546,11 +576,12 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      if (currthres >= 0)
-        Center(
-          child: Text(currthres.toString(),
-              style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
-        ),
+      Consumer<MyAppState>(
+          builder: (context, value, child) => currthres>0?Center(
+              child: Text(currthres.toString(),
+                  style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
+            ):const SizedBox.shrink() //if no threshold, don't show anything
+      ),
       if (oemail == "")
         Center(
           child: ElevatedButton(
@@ -608,15 +639,15 @@ class _HomePageState extends State<HomePage> {
                   TableRow(
                     children: [
                       Text(i.timestamp.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: i.isDangerous?Colors.red:Colors.black)),
                       Text(i.meal,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: i.isDangerous?Colors.red:Colors.black)),
                       Text((i.value).toStringAsFixed(0),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: i.isDangerous?Colors.red:Colors.black)),
                       Text(i.measure_method,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: i.isDangerous?Colors.red:Colors.black)),
                       Text(i.comment,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: i.isDangerous?Colors.red:Colors.black)),
                     ],
                   )
               ])),
