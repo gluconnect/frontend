@@ -80,7 +80,7 @@ class MyAppState extends ChangeNotifier {
     if (nup) {
       if (callback != null) callback();
     }
-    print("BLESS: $ress");
+    //print("BLESS: $ress");
     istoothing = false;
     nup = false;
     return ress;
@@ -148,23 +148,22 @@ class MyAppState extends ChangeNotifier {
 
     int rp = 500;
     try {
-      print("ADDDDDD");
+      //print("ADDDDDD");
       rp = await sendReadingToServer(lastinfo["user"]!, lastinfo["pass"]!, timestamp, value,
           meal, method, comments);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp == 200) {
-      print(
-          '{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
+      //print('{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
       dynamic ss = jsonDecode(
           '{"time": "${timestamp.toIso8601String()}","value": $value,"meal": "$meal","comment": "$comments","measure_method": "$method","extra_data": {}}');
-      print("suxes $ss");
+      //print("suxes $ss");
       nup = true;
       myReadings.add(GlucoReading(ss));
       flagReadings();
       readingscorrect = false;
-      print(myReadings);
+      //print(myReadings);
       notifyListeners();
     } else {
       //callback("User does not exist");
@@ -200,7 +199,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await addCT(lastinfo["user"]!, lastinfo["pass"]!, email);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp == 200) {
       caretakers.add(Caretaker(id: email, name: email /*TODO*/));
@@ -244,7 +243,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await remCT(lastinfo["user"]!, lastinfo["pass"]!, id);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp == 200) {
       caretakers.removeWhere((i) => i.id == id);
@@ -284,7 +283,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await remPT(lastinfo["user"]!, lastinfo["pass"]!, id);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp == 200) {
       patients.removeWhere((i) => i.id == id);
@@ -297,7 +296,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<List?> getPatients() async {
     Future<http.Response> getPT(String u, String p) async {
-      print("$u $p");
+      //print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/get_patients'),
@@ -327,11 +326,11 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getPT(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       List res = jsonDecode(rp.body);
-      print(res);
+      //print(res);
       patients =
           res.map((v) => Patient(id: v['email'], name: v['name'])).toList();
       return res;
@@ -371,11 +370,11 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getCaretakersHTTP(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       List res = jsonDecode(rp.body);
-      print(res);
+      //print(res);
       caretakers =
           res.map((v) => Caretaker(id: v['email'], name: v['name'])).toList();
       return res;
@@ -415,15 +414,15 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getReadingsFromServerHTTP(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       List<dynamic> res = jsonDecode(rp.body);
-      print(res);
+      //print(res);
       try {
         this.myReadings = res.map((v) => GlucoReading(v)).toList();
       } catch (e) {
-        print(e);
+        //print(e);
         return null;
       }
       flagReadings();
@@ -466,14 +465,14 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getPatientReadingsFromServerHTTP(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       List<dynamic> res = jsonDecode(rp.body);
       try {
         patientReadings = res.map((v) => GlucoReading(v)).toList();
         flagPatientReadings();
-        print(patientReadings);
+        //print(patientReadings);
       } catch (e) {
         return null;
       }
@@ -515,11 +514,11 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       String s = rp.body;
-      print("name obtained: $s");
+      //print("name obtained: $s");
       //lastinfo['othreshold'] = threshold.toString();
       return s;
     } else {
@@ -556,7 +555,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       String s = rp.body;
@@ -598,13 +597,13 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
-      print("got threshold in req");
+      //print("got threshold in req");
       double threshold = double.parse(rp.body);
       lastinfo['threshold'] = threshold.toString();
-      print("Benchmark 2");
+      //print("Benchmark 2");
       return threshold;
     } else {
       return null;
@@ -640,7 +639,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await getRD(lastinfo["user"]!, lastinfo["pass"]!, otheremail);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       double threshold = double.parse(rp.body);
@@ -653,7 +652,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<double?> changeThreshold(double nname) async {
     Future<http.Response> change(String u, String p, double nname) async {
-      print("$u $p");
+      //print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_threshold'),
@@ -681,7 +680,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await change(lastinfo["user"]!, lastinfo["pass"]!, nname);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       lastinfo['threshold'] = nname.toString();
@@ -694,7 +693,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<String?> changeName(String nname) async {
     Future<http.Response> change(String u, String p, String nname) async {
-      print("$u $p");
+      //print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_name'),
@@ -722,7 +721,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await change(lastinfo["user"]!, lastinfo["pass"]!, nname);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       lastinfo["name"] = rp.body;
@@ -734,7 +733,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<String?> changePass(String npass) async {
     Future<http.Response> change(String u, String p, String npass) async {
-      print("$u $p");
+      //print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/change_password'),
@@ -762,7 +761,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await change(lastinfo["user"]!, lastinfo["pass"]!, npass);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       lastinfo["pass"] = npass;
@@ -773,7 +772,7 @@ class MyAppState extends ChangeNotifier {
   }
 
   Future<int> logIn(username, password, serv) async {
-    print("${"User: " + username} Password: " + password);
+    //print("${"User: " + username} Password: " + password);
 
     Future<int> logInHTTP(String u, String p) async {
       ishttpying = true;
@@ -806,7 +805,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await logInHTTP(username, password);
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     if (rp == 200) {
@@ -818,7 +817,7 @@ class MyAppState extends ChangeNotifier {
   }
 
   Future<int> register(username, password, nickname) async {
-    print("${"User: " + username} Password: " + password);
+    //print("${"User: " + username} Password: " + password);
     Future<int> logIn(String u, String p, String n) async {
       ishttpying = true;
       final response = await tagTimeout(http.post(
@@ -847,9 +846,9 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await logIn(username, password, nickname);
     } catch (e) {
-      print(e);
+      //print(e);
     }
-    print(rp);
+    //print(rp);
     return rp;
   }
 
@@ -863,7 +862,7 @@ class MyAppState extends ChangeNotifier {
 
   Future<int> deleteAccount() async {
     Future<http.Response> change(String u, String p) async {
-      print("$u $p");
+      //print("$u $p");
       ishttpying = true;
       final http.Response response = await tagTimeout(http.post(
         Uri.parse('$URL/delete'),
@@ -893,7 +892,7 @@ class MyAppState extends ChangeNotifier {
     try {
       rp = await change(lastinfo["user"]!, lastinfo["pass"]!);
     } catch (e) {
-      print(e);
+      //print(e);
     }
     if (rp != null && rp.statusCode == 200) {
       logOut();

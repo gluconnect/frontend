@@ -284,6 +284,17 @@ class _HomePageState extends State<HomePage> {
       }
       currname = oemail;
     }
+    setState((){});
+  }
+
+  Future<void> loadReadings(MyAppState s, String oemail) async {
+    needsupdate = 0;
+    if (oemail == "") {
+      await s.getReadingsFromServerToLocal();
+    } else {
+      await s.getPatientReadingsFromServerToLocal(oemail);
+    }
+    setState((){});
   }
 
   @override
@@ -301,12 +312,7 @@ class _HomePageState extends State<HomePage> {
     if(needsupdate==1){
       loadThreshold(appState, oemail);
     }else if(needsupdate==2){
-      needsupdate = 0;
-      if(oemail == ""){
-        appState.getReadingsFromServerToLocal();
-      }else{
-        appState.getPatientReadingsFromServerToLocal(oemail);
-      }
+      loadReadings(appState, oemail);
     }
     if (nthres) {
       final formKey = GlobalKey<FormState>();
