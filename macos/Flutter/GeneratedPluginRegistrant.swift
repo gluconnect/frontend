@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import device_info_plus
-import flutter_blue_plus
+import flutter_blue_plus_darwin
 import universal_ble
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
