@@ -191,10 +191,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_web_bluetooth
-      sha256: fcd03e2e5f82edcedcbc940f1b6a0635a50757374183254f447640886c53208e
+      sha256: "1363831def5eed1e1064d1eca04e8ccb35446e8f758579c3c519e156b77926da"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.4"
+    version: "1.0.0"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -216,14 +216,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  js:
-    dependency: transitive
-    description:
-      name: js
-      sha256: "53385261521cc4a0c4658fd0ad07a7d14591cf8fc33abbceae306ddb974888dc"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.2"
   leak_tracker:
     dependency: transitive
     description:
@@ -449,10 +441,10 @@ packages:
     dependency: "direct main"
     description:
       name: universal_ble
-      sha256: "4d8f48dd09dbaf9c5b079e77924df78cc7c276d634183919160314edc22d7c76"
+      sha256: "35d210e93a5938c6a6d1fd3c710cf4ac90b1bdd1b11c8eb2beeb32600672e6e6"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.0"
+    version: "0.17.0"
   vector_math:
     dependency: transitive
     description:
