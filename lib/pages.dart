@@ -22,7 +22,6 @@ class _LogInPageState extends State<LogInPage> {
   Future<void> doTheThing(
       MyAppState s, String u, String p, String n, String v) async {
     if (islogin) {
-      FutureOr<int> f = 0;
       var rep = await s.logIn(u, p, v);
       if (rep == 200) {
         setState(() {
@@ -1270,16 +1269,16 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
         //),
       );
     } else {
-      if (false && appState.caretakers.isEmpty) {
-        return SizedBox.expand(
-          child: Column(
-            children: [
-              Expanded(child: PatientList(callback: nuPage)),
-              Expanded(child: CaretakerList(callback: nuPage))
-            ],
-          ),
-        );
-      } else {
+      // if (false && appState.caretakers.isEmpty) {
+      //   return SizedBox.expand(
+      //     child: Column(
+      //       children: [
+      //         Expanded(child: PatientList(callback: nuPage)),
+      //         Expanded(child: CaretakerList(callback: nuPage))
+      //       ],
+      //     ),
+      //   );
+      // } else {
         return SizedBox.expand(
           child: Column(
             children: [
@@ -1288,7 +1287,7 @@ class _SelectPatientsPageState extends State<SelectPatientsPage> {
             ],
           ),
         );
-      }
+      // }
     }
   }
 }

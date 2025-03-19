@@ -154,7 +154,7 @@ class _ConnectGlucometerState extends State<ConnectGlucometer> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    context.watch<MyAppState>();
     if (bleDevices.isNotEmpty) glucometer!["dev"] = bleDevices[0];
     return Column(
       children: [
